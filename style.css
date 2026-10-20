@@ -22,3 +22,6 @@ header{background:linear-gradient(#f5f4efef,#f5f4efb8 70%,transparent)}footer{co
 /* Native SVG viewBox owns zoom. No CSS scale, CSS zoom, filters, or bitmap layers
    are applied anywhere in this rendering subtree. */
 #scene{position:absolute;inset:0;width:100%;height:100%;transform:none!important;will-change:auto;overflow:hidden}.zoom-world{display:block;width:100%;height:100%;position:absolute;inset:0;overflow:hidden}.zoom-world text{font-kerning:normal}.zoom-world *{will-change:auto;filter:none;animation:none}
+/* Project information floats over a continuous material field. */
+.case-1 .case-hero,.case-1 .case-outro{color:#30372f;text-shadow:none}.case-1 .hero-title{background:#e9e4d9eb;color:#30372f}.case-1 .case-outro button{color:#30372f}
+.zoom-world{background:#e9e4d9}

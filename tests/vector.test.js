@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { contrastForWidth, pigment, projectedWidth } from '../vector-scene.js';
+import { contrastForWidth, pigment, projectedWidth, inkVisibility } from '../vector-scene.js';
 import { camera, story, frames } from '../geometry.js';
 test('print contrast emerges monotonically as a detail grows, without a reveal threshold jump',()=>{
   assert.equal(contrastForWidth(1),0);
@@ -23,3 +23,5 @@ test('pigment grows from the material color to the authored color',()=>{
   assert.equal(pigment('#e9e4d9','#202923',1),'rgb(233,228,217)');
   for(let i=0;i<=100;i++)assert.match(pigment('#e9e4d9','#202923',i/100),/^rgb\(\d+,\d+,\d+\)$/);
 });
+
+test('material detail emerges and recedes continuously without an opacity threshold',()=>{let last=inkVisibility(1);for(let width=1;width<50000;width*=1.001){const current=inkVisibility(width);assert.ok(current>=0&&current<=1);assert.ok(Math.abs(current-last)<.002);last=current;}assert.ok(inkVisibility(500)>.9);assert.ok(inkVisibility(50000)<.01);});

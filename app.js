@@ -1,5 +1,5 @@
 import { VectorScene } from './vector-scene.js';
-import { END, sceneNames, stops, storyAt, camera, normalizeWheel, clamp } from './geometry.js';
+import { END, stops, storyAt, camera, normalizeWheel, clamp } from './geometry.js';
 const $ = selector => document.querySelector(selector);
 const scene = $('#scene'), explorer = $('#explorer'), dialog = $('#panel'), caseStudy = $('#case-study');
 const vectorScene = new VectorScene(scene);
@@ -93,7 +93,7 @@ function render() {
  $('.explore-hint').style.opacity=current<.1?1:0;
  const count=current<.8?0:part.project+1;
  $('#position').textContent=`0${count} / 03`;
- $('#chapter-label').textContent=current<.8?'SELECTED WORKS — 2024 / 2026':part.type==='journey'?`${sceneNames[part.scene]} — EXPLORATION`:`${projects[part.project].name} — ${inCase?'CASE STUDY':'SELECTED WORK'}`;
+ $('#chapter-label').textContent=current<.8?'SELECTED WORKS — 2024 / 2026':part.type==='journey'?'ROOT4 — IN BETWEEN':`${projects[part.project].name} — ${inCase?'CASE STUDY':'SELECTED WORK'}`;
  $('.track i').style.width=current/END*100+'%';
  $('#back').disabled=target<=0;$('#forward').disabled=target>=END;
  explorer.setAttribute('aria-label',`프로젝트 탐색 ${Math.round(current/END*100)}%. ${inCase?projects[part.project].name+' 상세 설명':part.type==='journey'?'공간 탐색':'확대 이동'}. 방향키로 이동, Home 처음, End 마지막.`);
@@ -106,7 +106,7 @@ document.addEventListener('keydown',event=>{if(paused||fallback.matches||event.t
 $('#forward').onclick=()=>{target=stops.find(stop=>stop>target+.001)??END;wake();};
 $('#back').onclick=()=>{target=stops.findLast(stop=>stop<target-.001)??0;wake();};
 $('.logo').onclick=event=>{event.preventDefault();target=0;wake();if(fallback.matches)window.scrollTo({top:0,behavior:'instant'});};
-const panels={about:'<h2 id="panel-title">Good work.<br>Better together.</h2><p>root4는 브랜드의 본질을 발견하고, 시각 언어와 디지털 경험으로 연결하는 독립 디자인 스튜디오입니다.</p><p>브랜딩, 아트 디렉션, 웹 디자인과 실험적인 인터랙션을 함께 다룹니다.</p><p class="panel-note">SEOUL, KR · INDEPENDENT DESIGN PRACTICE<br>현재 프로젝트와 상세 설명은 디자인 콘셉트를 보여 주는 샘플입니다.</p>',lab:'<h2 id="panel-title">Always<br>in motion.</h2><p>정지된 이미지 너머, 움직임이 만드는 새로운 감각을 탐색합니다.</p><p>01 — Nested stories<br>작업물의 디테일이 다음 세계로 이어지는 탐색.</p><p>02 — Living identities<br>접힌 종이의 빛, 식물의 실루엣, 겹쳐 흐르는 파형.</p><p>03 — Different perspectives<br>레이어마다 다른 속도로 전개되는 프로젝트 스토리.</p>',contact:'<h2 id="panel-title">Let’s make<br>something matter.</h2><p>브랜드와 디지털 경험에 관한 새로운 협업을 기다립니다.</p><p>연락처는 준비 중입니다.</p><p class="panel-note">BASED IN SEOUL · OPEN TO THE WORLD</p>'};
+const panels={about:'<h2 id="panel-title">Good work.<br>Better together.</h2><p>root4는 브랜드의 본질을 발견하고, 시각 언어와 디지털 경험으로 연결하는 독립 디자인 스튜디오입니다.</p><p>브랜딩, 아트 디렉션, 웹 디자인과 실험적인 인터랙션을 함께 다룹니다.</p><p class="panel-note">SEOUL, KR · INDEPENDENT DESIGN PRACTICE<br>현재 프로젝트와 상세 설명은 디자인 콘셉트를 보여 주는 샘플입니다.</p>',lab:'<h2 id="panel-title">Always<br>in motion.</h2><p>정지된 이미지 너머, 움직임이 만드는 새로운 감각을 탐색합니다.</p><p>01 — Nested stories<br>프레임이나 입구 없이 인쇄의 결을 따라 깊어지는 탐색.</p><p>02 — Living identities<br>종이의 결, 잉크의 밀도, 확대하면 드러나는 타이포그래피.</p><p>03 — Different perspectives<br>레이어마다 다른 속도로 전개되는 프로젝트 스토리.</p>',contact:'<h2 id="panel-title">Let’s make<br>something matter.</h2><p>브랜드와 디지털 경험에 관한 새로운 협업을 기다립니다.</p><p>연락처는 준비 중입니다.</p><p class="panel-note">BASED IN SEOUL · OPEN TO THE WORLD</p>'};
 let opener;
 document.querySelectorAll('[data-panel]').forEach(button=>button.onclick=()=>{opener=button;paused=true;target=current;if(raf)cancelAnimationFrame(raf);raf=0;document.body.classList.add('motion-paused');syncMotionClock();$('#panel-content').innerHTML=panels[button.dataset.panel];dialog.showModal();$('#close-panel').focus();});
 $('#close-panel').onclick=()=>dialog.close();
