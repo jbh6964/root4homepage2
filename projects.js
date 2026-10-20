@@ -1,0 +1,20 @@
+export const projects = [
+  { name:'FORM / OTHER', short:'form & other.', role:'브랜드 전략 · 아이덴티티 · 아트 디렉션', type:'a', year:'2026', category:'CULTURE & COMMUNITY',
+    title:'Different forms.\nOne shared voice.', heading:'다름을 모아,\n하나의 태도로.',
+    description:'독립적인 크리에이터가 각자의 개성을 지키면서도 하나의 커뮤니티로 연결될 수 있을까? 서로 다른 형태가 만나 새로운 균형을 이루는 브랜드를 구상했습니다.',
+    approach:'세리프 타이포그래피와 접힌 종이의 구조를 조합했습니다. 아이보리 용지와 짙은 잉크, 섬세한 인쇄 디테일이 독립적인 태도와 연결의 감각을 함께 전합니다.',
+    scope:['Brand strategy','Visual identity','Art direction','Digital applications'], caption:'하나의 로고보다, 함께 확장되는 시스템.' },
+  { name:'mori', short:'mori', role:'브랜드 아이덴티티 · 패키지 · 디지털 경험', type:'b', year:'2025', category:'WELLNESS & DAILY RITUAL',
+    title:'A little closer\nto your nature.', heading:'일상에 스며드는\n자연의 리듬.',
+    description:'바쁜 일상 속 작은 루틴을 자연과 연결하는 웰니스 브랜드 콘셉트입니다. 좋은 습관을 강요하기보다, 손이 가고 곁에 두고 싶은 경험을 디자인했습니다.',
+    approach:'잎의 곡선에서 출발한 그래픽과 차분한 세이지 컬러를 사용했습니다. 패키지의 촉감부터 모바일 화면의 정보 밀도까지 같은 호흡으로 이어집니다.',
+    scope:['Brand identity','Packaging system','E-commerce direction','Digital experience'], caption:'보이는 것에서, 매일 손에 닿는 경험으로.' },
+  { name:'OFFBEAT', short:'OFFBEAT', role:'크리에이티브 디렉션 · 웹 디자인 · 인터랙션', type:'c', year:'2025', category:'MUSIC & INDEPENDENT CULTURE',
+    title:'Find your\nown frequency.', heading:'익숙한 박자\n밖의 새로운 감각.',
+    description:'음악을 고르는 순간부터 새로운 아티스트를 발견하는 순간까지. 장르의 경계를 넘어 독립 음악의 에너지를 전달하는 디지털 플랫폼을 제안합니다.',
+    approach:'흑백의 절제된 대비와 넓은 여백, 유연한 세리프 타이포그래피를 조합했습니다. 얇은 선으로 겹친 파형이 음악의 밀도와 리듬을 시각화합니다.',
+    scope:['Creative direction','Web design','Motion language','Interaction design'], caption:'정해진 장르 없이. 당신만의 주파수로.' },
+ {name:'LUMA',short:'luma',role:'브랜드 아이덴티티 · 제품 아트 디렉션 · 웹 디자인',type:'d',year:'2026',category:'LIGHTING & OBJECTS',title:'Light, in a\nnew language.',heading:'빛으로 완성하는\n공간의 표정.',description:'조명을 하나의 오브젝트로 바라보는 리빙 브랜드 콘셉트입니다. 빛이 켜지기 전의 형태와 켜진 후의 분위기를 함께 디자인했습니다.',approach:'라일락과 따뜻한 코랄, 부드럽게 접힌 곡선을 사용했습니다. 제품의 실루엣을 아이덴티티로 확장하고 디지털 쇼룸에서 조명의 질감을 전달합니다.',scope:['Brand identity','Product art direction','Digital showroom','Web design'],caption:'하나의 오브젝트가 공간 전체를 바꾸는 순간.'},
+ {name:'STILL ROOM',short:'still room',role:'공간 브랜딩 · 인쇄물 · 예약 경험 디자인',type:'e',year:'2025',category:'STAYS & SLOW LIVING',title:'A place to\nfeel yourself.',heading:'머무는 시간이\n기억이 되는 공간.',description:'낯선 도시에서도 나만의 속도를 되찾을 수 있는 작은 스테이를 위한 브랜드 콘셉트입니다. 예약부터 체크아웃까지 차분한 여운을 이어 갑니다.',approach:'버터 옐로와 짙은 브릭, 정제된 세리프를 조합했습니다. 객실의 키 태그, 안내 카드와 예약 화면이 하나의 환대 방식으로 이어집니다.',scope:['Place branding','Printed matter','Guest experience','Booking design'],caption:'여백과 온도로 전하는 조용한 환대.'},
+ {name:'INDEX / 06',short:'index',role:'편집 디자인 · 타이포그래피 · 디지털 아카이브',type:'f',year:'2026',category:'EDITORIAL & CULTURE',title:'New ideas.\nNo fixed order.',heading:'새로운 시선을\n기록하는 방식.',description:'독립적인 창작자의 생각과 작업 과정을 기록하는 문화 저널 콘셉트입니다. 결과물뿐 아니라 그 뒤에 남은 질문과 실험을 함께 다룹니다.',approach:'강한 블루와 오프화이트, 과감한 숫자와 정교한 그리드를 대비시켰습니다. 인쇄 매거진의 리듬을 디지털 아카이브에서도 이어 갑니다.',scope:['Editorial direction','Typography system','Print design','Digital archive'],caption:'정답보다 오래 남는 질문을 모읍니다.'}
+];
