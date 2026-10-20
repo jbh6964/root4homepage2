@@ -1,4 +1,6 @@
-import { frames, smooth } from './geometry.js';
+import { frames, sceneProjects, smooth } from './geometry.js';
+
+import { worldArtwork, worldBases, openingPath, foreground, projectThread } from './worlds.js';
 
 const NS = 'http://www.w3.org/2000/svg';
 const PAPER = '#e9e4d9';
@@ -57,10 +59,10 @@ function artwork(index, prefix) {
     ${text(34, 486, 'INDEPENDENT IN SPIRIT. CONNECTED BY DESIGN.', 6, 'letter-spacing="2"')}
     <g stroke="#525b50" stroke-width=".8"><rect x="340" y="482" width="3" height="3"/><rect x="348" y="482" width="3" height="3" fill="none"/><rect x="356" y="482" width="3" height="3" fill="none"/></g>`;
   if (index === 1) return `
-    ${text(35, 36, 'MORI / BOTANICAL STUDIES — 02', 7, `${paint('fill', '#bcc4b6')} letter-spacing="1.5"`)}
+
     ${botanical()}
-    ${text(340, 215, 'mori', 118, `${paint('fill', PAPER)} font-family="Georgia,serif" letter-spacing="-7"`)}
-    ${text(340, 255, 'the nature of everyday.', 12, `${paint('fill', PAPER)} font-family="Georgia,serif" font-style="italic"`)}
+
+
     <rect x="130" y="130" width="160" height="300" rx="18" fill="url(#${prefix}-bottle)"/>
     <rect x="165" y="92" width="90" height="46" rx="6" ${paint('fill', '#151e17')}/>
     ${Array.from({length:24}, (_, i) => `<path d="M${169+i*3.5} 96v37" ${paint('stroke', '#354131')} stroke-width=".8"/>`).join('')}
@@ -69,23 +71,23 @@ function artwork(index, prefix) {
     ${text(144, 318, 'DAILY BALANCE', 5, `${paint('fill', '#303b2e')} letter-spacing=".65"`)}
     ${text(144, 327, 'BOTANICAL FORMULA / 01', 5, `${paint('fill', '#303b2e')} letter-spacing=".65"`)}
     ${text(144, 343, '30 ml / 1.0 fl oz', 4, `${paint('fill', '#303b2e')} letter-spacing=".5"`)}
-    ${text(520, 485, 'SLOW DOWN. COME CLOSER.', 7, `${paint('fill', PAPER)} letter-spacing="2"`)}`;
+    `;
   return `
-    ${text(35, 36, 'OFFBEAT® — INDEPENDENT MUSIC &amp; CULTURE', 7, `${paint('fill', '#262c28')} letter-spacing="2"`)}
+
     ${wave()}
-    ${text(35, 220, 'Off', 154, `${paint('fill', '#262c28')} font-family="Georgia,serif" font-style="italic" letter-spacing="-9"`)}
-    ${text(125, 357, 'beat.', 154, `${paint('fill', '#262c28')} font-family="Georgia,serif" font-style="italic" letter-spacing="-9"`)}
-    ${text(35, 490, 'VOL. 004', 7, `${paint('fill', '#262c28')} letter-spacing="1.5"`)}
-    ${text(600, 490, 'SEOUL / EVERYWHERE', 7, `${paint('fill', '#262c28')} letter-spacing="1.5"`)}
+
+
+
+
     <rect x="736" y="34" width="6" height="6" ${paint('fill', '#8d4037')}/>`;
 }
 function project(index, prefix) {
-  const base = index === 1 ? INK : PAPER;
-  const child = frames[index + 1];
-  return `<g data-vector-project="${index}" data-base="${base}" fill="${index === 1 ? PAPER : INK}">
+  const base = worldBases[index], child = frames[index + 1], projectIndex = sceneProjects[index];
+  return `<g data-vector-project="${index}" data-base="${base}" fill="${index === 3 ? PAPER : INK}">
     <rect width="780" height="520" fill="${base}"/>
-    <g data-vector-art="${index}">${artwork(index, prefix)}</g>
-    ${child ? `<svg data-nested-project="${index + 1}" x="${child.x}" y="${child.y}" width="${child.w}" height="${child.h}" viewBox="0 0 780 520" overflow="hidden">${project(index + 1, prefix)}</svg>` : ''}
+    <g data-vector-art="${index}">${projectIndex === null ? worldArtwork(index) : artwork(projectIndex, prefix)}</g>
+    ${child ? `<g clip-path="url(#${prefix}-opening-${index})"><svg data-nested-project="${index + 1}" x="${child.x}" y="${child.y}" width="${child.w}" height="${child.h}" viewBox="0 0 780 520" overflow="hidden">${project(index + 1, prefix)}</svg></g>` : ''}
+    ${foreground(index,child)}${projectThread(index)}
   </g>`;
 }
 function placedProject(prefix) {
@@ -132,13 +134,14 @@ export class VectorScene {
     const prefix = `vector-${instance++}`;
     this.segment = segment;
     this.svg.innerHTML = `<defs>
+      ${frames.slice(1).map((frame,index)=>`<clipPath id="${prefix}-opening-${index}" clipPathUnits="userSpaceOnUse"><path d="${openingPath(frame,index)}"/></clipPath>`).join('')}
       <linearGradient id="${prefix}-paper" x1="44" y1="32" x2="240" y2="335" gradientUnits="userSpaceOnUse"><stop stop-color="#faf7ef"/><stop offset=".42" stop-color="#b9b8ad"/><stop offset=".52" stop-color="#f1eee5"/><stop offset="1" stop-color="#6e726b"/></linearGradient>
       <linearGradient id="${prefix}-bottle"><stop ${paint('stop-color','#0d1610')}/><stop offset=".28" ${paint('stop-color','#47513c')}/><stop offset=".6" ${paint('stop-color','#303e2b')}/><stop offset="1" ${paint('stop-color','#151e17')}/></linearGradient>
     </defs><g data-vector-world font-family="Arial,sans-serif">${segment === 0 ? collage(prefix) : project(segment - 1, prefix)}</g>`;
     this.world = this.svg.querySelector('[data-vector-world]');
     this.details = [...this.svg.querySelectorAll('[data-vector-project]')].map(group => ({
       index: Number(group.dataset.vectorProject), base: group.dataset.base,
-      colors: [...group.querySelectorAll(`[data-vector-art="${group.dataset.vectorProject}"] [data-pigment-fill], [data-vector-art="${group.dataset.vectorProject}"] [data-pigment-stroke]`)].flatMap(node => ['fill', 'stroke'].filter(attribute => node.hasAttribute(`data-pigment-${attribute}`)).map(attribute => ({ node, color: node.getAttribute(`data-pigment-${attribute}`), attribute }))),
+      colors: [...group.querySelectorAll(`[data-vector-art="${group.dataset.vectorProject}"] [fill], [data-vector-art="${group.dataset.vectorProject}"] [stroke]`)].flatMap(node => ['fill', 'stroke'].filter(attribute => /^#[a-f0-9]{6}$/i.test(node.getAttribute(attribute)||'')).map(attribute => ({ node, color: node.getAttribute(attribute), attribute }))),
       amount: -1
     }));
     this.bottleStops = [...this.svg.querySelectorAll('[data-pigment-stop-color]')];
@@ -162,7 +165,7 @@ export class VectorScene {
       if (Math.abs(detail.amount - amount) < .0001) continue;
       detail.amount = amount;
       for (const entry of detail.colors) entry.node.setAttribute(entry.attribute, pigment(entry.color, detail.base, amount));
-      if (detail.index === 1) for (const node of this.bottleStops) node.setAttribute('stop-color', pigment(node.getAttribute('data-pigment-stop-color'), INK, amount));
+      if (detail.index === 3) for (const node of this.bottleStops) node.setAttribute('stop-color', pigment(node.getAttribute('data-pigment-stop-color'), INK, amount));
     }
   }
 }

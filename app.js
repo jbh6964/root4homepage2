@@ -1,5 +1,5 @@
 import { VectorScene } from './vector-scene.js';
-import { END, stops, storyAt, camera, normalizeWheel, clamp } from './geometry.js';
+import { END, sceneNames, stops, storyAt, camera, normalizeWheel, clamp } from './geometry.js';
 const $ = selector => document.querySelector(selector);
 const scene = $('#scene'), explorer = $('#explorer'), dialog = $('#panel'), caseStudy = $('#case-study');
 const vectorScene = new VectorScene(scene);
@@ -93,10 +93,10 @@ function render() {
  $('.explore-hint').style.opacity=current<.1?1:0;
  const count=current<.8?0:part.project+1;
  $('#position').textContent=`0${count} / 03`;
- $('#chapter-label').textContent=current<.8?'SELECTED WORKS — 2024 / 2026':`${projects[part.project].name} — ${inCase?'CASE STUDY':'SELECTED WORK'}`;
+ $('#chapter-label').textContent=current<.8?'SELECTED WORKS — 2024 / 2026':part.type==='journey'?`${sceneNames[part.scene]} — EXPLORATION`:`${projects[part.project].name} — ${inCase?'CASE STUDY':'SELECTED WORK'}`;
  $('.track i').style.width=current/END*100+'%';
  $('#back').disabled=target<=0;$('#forward').disabled=target>=END;
- explorer.setAttribute('aria-label',`프로젝트 탐색 ${Math.round(current/END*100)}%. ${inCase?projects[part.project].name+' 상세 설명':'확대 이동'}. 방향키로 이동, Home 처음, End 마지막.`);
+ explorer.setAttribute('aria-label',`프로젝트 탐색 ${Math.round(current/END*100)}%. ${inCase?projects[part.project].name+' 상세 설명':part.type==='journey'?'공간 탐색':'확대 이동'}. 방향키로 이동, Home 처음, End 마지막.`);
 }
 function tick(time) { raf=0;if(paused||fallback.matches)return;const dt=Math.min(50,time-(last||time));last=time;current+=(target-current)*(1-Math.exp(-dt/105));if(Math.abs(target-current)<.00005)current=target;render();if(current!==target)raf=requestAnimationFrame(tick); }
 function wake(){if(!raf&&!paused&&!fallback.matches){last=0;raf=requestAnimationFrame(tick);}}
