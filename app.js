@@ -1,6 +1,8 @@
-import { frames, END, stops, storyAt, camera, normalizeWheel, clamp } from './geometry.js';
+import { VectorScene } from './vector-scene.js';
+import { END, stops, storyAt, camera, normalizeWheel, clamp } from './geometry.js';
 const $ = selector => document.querySelector(selector);
 const scene = $('#scene'), explorer = $('#explorer'), dialog = $('#panel'), caseStudy = $('#case-study');
+const vectorScene = new VectorScene(scene);
 const projects = [
   { name:'FORM / OTHER', short:'form & other.', role:'브랜드 전략 · 아이덴티티 · 아트 디렉션', type:'a', year:'2026', category:'CULTURE & COMMUNITY',
     title:'Different forms.\nOne shared voice.', heading:'다름을 모아,\n하나의 태도로.',
@@ -40,38 +42,20 @@ function card(index, frame, nested=true) {
   const canonical = document.createElement('div'); canonical.className='canonical';
   canonical.style.cssText=`position:absolute;width:780px;height:520px;zoom:${frame.w/780}`;
   canonical.innerHTML=`<div class="art-inner"><span class="tiny-label">${projects[index].category}</span>${artwork(index)}<div class="art-foot"><span>${projects[index].name}</span><span>ROOT4 × ${projects[index].year} ↗</span></div></div>`;
-  if(nested && index<2) {
-    const aperture=document.createElement('div'); aperture.className='embedded-detail embedded-'+index;
-    const next=frames[index+1];
-    aperture.style.cssText=`left:${next.x}px;top:${next.y}px;width:${next.w}px;height:${next.h}px`;
-    aperture.append(card(index+1,{x:0,y:0,w:next.w,h:next.h,a:0}));
-    canonical.append(aperture);
-  }
   element.append(canonical); return element;
 }
-function decoration(cls,x,y,w,h,a,html) { const e=document.createElement('div');e.className='decor '+cls;e.style.cssText=`left:${x}px;top:${y}px;width:${w}px;height:${h}px;transform:rotate(${a}deg)`;e.innerHTML=html;return e; }
 // Keep ambient animation phases continuous when a nested scene is rebased.
 const motionOrigin=performance.now();
 let motionPausedAt=null,motionPausedTotal=0;
 function syncMotionClock(){
- const now=performance.now(),halted=document.body.matches('.motion-paused,.motion-off,.tab-hidden');
+ const now=performance.now(),halted=document.body.matches('.motion-paused,.motion-off,.tab-hidden')||fallback.matches;
  if(halted&&motionPausedAt===null)motionPausedAt=now;
  else if(!halted&&motionPausedAt!==null){motionPausedTotal+=now-motionPausedAt;motionPausedAt=null;}
+ vectorScene.setPaused(halted);
 }
 function synchronizeAnimations(root){
  const time=(motionPausedAt??performance.now())-motionOrigin-motionPausedTotal;
  root.getAnimations({subtree:true}).forEach(animation=>{animation.currentTime=time;});
-}
-let shown=-1;
-function mount(segment) {
-  scene.replaceChildren();
-  if(segment===0) {
-    scene.append(decoration('poster',1130,60,290,360,10,'A study<br>in quiet<br>contrast.<em>Q.</em>'),decoration('phone',190,460,165,300,-12,'<b>mori.</b><div class="blob"></div><p>A little closer to nature.</p><p>Explore your daily ritual ↗</p>'),decoration('type',-65,750,330,250,7,'Aa<br>Bb.<small>TYPE STUDIES — NO. 04</small>'),decoration('disc',1260,640,270,270,0,''),decoration('ticket',720,825,300,170,5,'<small>ROOT4 EXPERIMENTS / 026</small>Off the<br>record.'));
-    scene.append(card(0,frames[0]));
-    scene.append(decoration('phone',1030,690,135,240,8,'<b>OFF/</b><div class="blob" style="background:#afb4ff"></div><p>Find your frequency.</p>'));
-  } else scene.append(card(segment-1,{x:0,y:0,w:780,h:520,a:0}));
-  synchronizeAnimations(scene);
-  shown=segment;
 }
 function specimen(index) {
   if(index===0) return '<div class="identity-poster"><span>FORM / OTHER — A BRAND IN COMMON</span><strong>Different<br>by design<span>↗</span></strong><small>ONE COMMUNITY. MANY POSSIBILITIES.</small></div><div class="identity-card"><span>F/O®</span><small>INDEPENDENT MINDS.<br>CONNECTED BY DESIGN.</small></div><div class="identity-seal">form<br><em>& other.</em></div>';
@@ -95,8 +79,7 @@ let target=0,current=0,paused=false,raf=0,last=0;
 const fallback=matchMedia('(max-width:700px), (prefers-reduced-motion: reduce)');
 function render() {
  const cam=camera(current,innerWidth,innerHeight), part=storyAt(current);
- if(shown!==cam.segment)mount(cam.segment);
- scene.style.transform=`translate(${innerWidth/2}px,${innerHeight/2}px) rotate(${cam.a}deg) scale(${cam.s}) translate(${-cam.x}px,${-cam.y}px)`;
+ vectorScene.render(cam,innerWidth,innerHeight,((motionPausedAt??performance.now())-motionOrigin-motionPausedTotal)/1000,document.body.matches('.motion-paused,.motion-off,.tab-hidden')||fallback.matches);
  const inCase=part.type==='detail';
  if(inCase && caseIndex!==part.project)mountCase(part.project);
  caseStudy.hidden=!inCase;
@@ -135,7 +118,7 @@ projects.forEach((project,index)=>{
  const image=document.createElement('div');image.className='art-list';image.setAttribute('aria-hidden','true');image.append(card(index,{x:0,y:0,w:780,h:520,a:0},false));article.append(image);
  article.insertAdjacentHTML('beforeend',`<span class="mobile-category">${project.category} / ${project.year}</span><h2>0${index+1} — ${project.name}</h2><p>${project.role}</p><h3>${project.heading.replace('\n',' ')}</h3><p>${project.description}</p><p>${project.approach}</p><div class="mobile-specimen case-${index}">${specimen(index)}</div><p>${project.caption}</p>`);$('#list-items').append(article);
 });
-function resize(){document.querySelectorAll('.art-list').forEach(element=>{element.firstChild.style.transform=`scale(${element.clientWidth/780})`;});render();wake();}
+function resize(){syncMotionClock();document.querySelectorAll('.art-list').forEach(element=>{element.firstChild.style.transform=`scale(${element.clientWidth/780})`;});render();wake();}
 window.addEventListener('resize',resize);fallback.addEventListener('change',resize);resize();
 $('#toggle-motion').onclick=()=>{const off=document.body.classList.toggle('motion-off');syncMotionClock();$('#toggle-motion').setAttribute('aria-pressed',String(off));$('#toggle-motion').setAttribute('aria-label',off?'반복 모션 재생':'반복 모션 일시 정지');$('#toggle-motion').textContent=off?'MOTION OFF ▷':'MOTION ON Ⅱ';};
 document.addEventListener('visibilitychange',()=>{document.body.classList.toggle('tab-hidden',document.hidden);syncMotionClock();});
