@@ -81,6 +81,8 @@ function render() {
  const cam=camera(current,innerWidth,innerHeight), part=storyAt(current);
  vectorScene.render(cam,innerWidth,innerHeight,((motionPausedAt??performance.now())-motionOrigin-motionPausedTotal)/1000,document.body.matches('.motion-paused,.motion-off,.tab-hidden')||fallback.matches);
  const inCase=part.type==='detail';
+ $('#journey-end').hidden=!(part.type==='outro'&&part.t>.8);
+ $('#flow-map').classList.toggle('reading',inCase);
  if(inCase && caseIndex!==part.project)mountCase(part.project);
  caseStudy.hidden=!inCase;
  if(inCase) {
@@ -91,9 +93,9 @@ function render() {
  }
  $('.intro').style.opacity=current<.12?1:0;
  $('.explore-hint').style.opacity=current<.1?1:0;
- const count=current<.8?0:part.project+1;
+ const count=current<3.8?0:part.project+1;
  $('#position').textContent=`0${count} / 03`;
- $('#chapter-label').textContent=current<.8?'SELECTED WORKS — 2024 / 2026':part.type==='journey'?'ROOT4 — IN BETWEEN':`${projects[part.project].name} — ${inCase?'CASE STUDY':'SELECTED WORK'}`;
+ $('#chapter-label').textContent=part.type==='overview'?'SELECTED WORKS — THE WHOLE JOURNEY':part.type==='journey'?'FOLLOWING THE FLOW':`${projects[part.project].name} — ${inCase?'CASE STUDY':'SELECTED WORK'}`;
  $('.track i').style.width=current/END*100+'%';
  $('#back').disabled=target<=0;$('#forward').disabled=target>=END;
  explorer.setAttribute('aria-label',`프로젝트 탐색 ${Math.round(current/END*100)}%. ${inCase?projects[part.project].name+' 상세 설명':part.type==='journey'?'공간 탐색':'확대 이동'}. 방향키로 이동, Home 처음, End 마지막.`);
@@ -103,10 +105,11 @@ function wake(){if(!raf&&!paused&&!fallback.matches){last=0;raf=requestAnimation
 function move(delta){target=clamp(target+delta,0,END);wake();}
 explorer.addEventListener('wheel',event=>{if(paused||fallback.matches||event.ctrlKey)return;event.preventDefault();move(normalizeWheel(event,innerHeight));},{passive:false});
 document.addEventListener('keydown',event=>{if(paused||fallback.matches||event.target.closest('input,textarea')||(event.key===' '&&event.target.closest('button,a')))return;const keys={ArrowDown:.16,ArrowRight:.16,ArrowUp:-.16,ArrowLeft:-.16,PageDown:.65,PageUp:-.65,' ':(event.shiftKey?-.45:.45)};if(event.key in keys){event.preventDefault();move(keys[event.key]);}else if(event.key==='Home'||event.key==='End'){event.preventDefault();target=event.key==='Home'?0:END;wake();}});
+$('#flow-overview').onclick=$('#restart-flow').onclick=()=>{target=0;wake();};
 $('#forward').onclick=()=>{target=stops.find(stop=>stop>target+.001)??END;wake();};
 $('#back').onclick=()=>{target=stops.findLast(stop=>stop<target-.001)??0;wake();};
 $('.logo').onclick=event=>{event.preventDefault();target=0;wake();if(fallback.matches)window.scrollTo({top:0,behavior:'instant'});};
-const panels={about:'<h2 id="panel-title">Good work.<br>Better together.</h2><p>root4는 브랜드의 본질을 발견하고, 시각 언어와 디지털 경험으로 연결하는 독립 디자인 스튜디오입니다.</p><p>브랜딩, 아트 디렉션, 웹 디자인과 실험적인 인터랙션을 함께 다룹니다.</p><p class="panel-note">SEOUL, KR · INDEPENDENT DESIGN PRACTICE<br>현재 프로젝트와 상세 설명은 디자인 콘셉트를 보여 주는 샘플입니다.</p>',lab:'<h2 id="panel-title">Always<br>in motion.</h2><p>정지된 이미지 너머, 움직임이 만드는 새로운 감각을 탐색합니다.</p><p>01 — Nested stories<br>프레임이나 입구 없이 인쇄의 결을 따라 깊어지는 탐색.</p><p>02 — Living identities<br>종이의 결, 잉크의 밀도, 확대하면 드러나는 타이포그래피.</p><p>03 — Different perspectives<br>레이어마다 다른 속도로 전개되는 프로젝트 스토리.</p>',contact:'<h2 id="panel-title">Let’s make<br>something matter.</h2><p>브랜드와 디지털 경험에 관한 새로운 협업을 기다립니다.</p><p>연락처는 준비 중입니다.</p><p class="panel-note">BASED IN SEOUL · OPEN TO THE WORLD</p>'};
+const panels={about:'<h2 id="panel-title">Good work.<br>Better together.</h2><p>root4는 브랜드의 본질을 발견하고, 시각 언어와 디지털 경험으로 연결하는 독립 디자인 스튜디오입니다.</p><p>브랜딩, 아트 디렉션, 웹 디자인과 실험적인 인터랙션을 함께 다룹니다.</p><p class="panel-note">SEOUL, KR · INDEPENDENT DESIGN PRACTICE<br>현재 프로젝트와 상세 설명은 디자인 콘셉트를 보여 주는 샘플입니다.</p>',lab:'<h2 id="panel-title">Always<br>in motion.</h2><p>정지된 이미지 너머, 움직임이 만드는 새로운 감각을 탐색합니다.</p><p>01 — Nested stories<br>전체 여정을 먼저 보고 경로를 따라 프로젝트 지점을 통과하는 탐색.</p><p>02 — Living identities<br>같은 공간 안에서 연결되는 브랜드, 패키지와 디지털 경험.</p><p>03 — Different perspectives<br>레이어마다 다른 속도로 전개되는 프로젝트 스토리.</p>',contact:'<h2 id="panel-title">Let’s make<br>something matter.</h2><p>브랜드와 디지털 경험에 관한 새로운 협업을 기다립니다.</p><p>연락처는 준비 중입니다.</p><p class="panel-note">BASED IN SEOUL · OPEN TO THE WORLD</p>'};
 let opener;
 document.querySelectorAll('[data-panel]').forEach(button=>button.onclick=()=>{opener=button;paused=true;target=current;if(raf)cancelAnimationFrame(raf);raf=0;document.body.classList.add('motion-paused');syncMotionClock();$('#panel-content').innerHTML=panels[button.dataset.panel];dialog.showModal();$('#close-panel').focus();});
 $('#close-panel').onclick=()=>dialog.close();

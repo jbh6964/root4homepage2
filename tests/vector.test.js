@@ -1,27 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { contrastForWidth, pigment, projectedWidth, inkVisibility } from '../vector-scene.js';
-import { camera, story, frames } from '../geometry.js';
-test('print contrast emerges monotonically as a detail grows, without a reveal threshold jump',()=>{
-  assert.equal(contrastForWidth(1),0);
-  assert.equal(contrastForWidth(400),1);
-  let previous=0;
-  for(let width=1;width<=500;width+=.1){const current=contrastForWidth(width);assert.ok(current>=previous&&current-previous<.01);previous=current;}
-});
-test('scene rebasing preserves both projected detail size and pigment contrast',()=>{
-  for(const[w,h]of[[1440,1000],[950,760],[1920,1080]])for(const boundary of story.filter(part=>part.type!=='detail'&&part.scene>0).map(part=>part.end)){
-    const before=camera(boundary-1e-10,w,h),after=camera(boundary,w,h);
-    for(let index=after.segment-1;index<frames.length;index++){
-      const a=projectedWidth(index,before),b=projectedWidth(index,after);
-      assert.ok(Math.abs(a-b)<.00001);
-      assert.ok(Math.abs(contrastForWidth(a)-contrastForWidth(b))<.00001);
-    }
-  }
-});
-test('pigment grows from the material color to the authored color',()=>{
-  assert.equal(pigment('#e9e4d9','#202923',0),'rgb(32,41,35)');
-  assert.equal(pigment('#e9e4d9','#202923',1),'rgb(233,228,217)');
-  for(let i=0;i<=100;i++)assert.match(pigment('#e9e4d9','#202923',i/100),/^rgb\(\d+,\d+,\d+\)$/);
-});
+import {routePoint,routeCurves,stationDistances} from '../geometry.js';
+test('arc-length traversal has consistent spatial speed through bends',()=>{const distances=[];for(let i=1;i<=1000;i++){const a=routePoint((i-1)/1000),b=routePoint(i/1000);distances.push(Math.hypot(a.x-b.x,a.y-b.y));}const min=Math.min(...distances),max=Math.max(...distances);assert.ok(max/min<1.03);});
+test('every connected curve shares its endpoint and route order',()=>{for(let i=1;i<routeCurves.length;i++)assert.deepEqual(routeCurves[i][0],routeCurves[i-1][3]);assert.ok(stationDistances.every((d,i)=>i===0||d>stationDistances[i-1]));assert.equal(stationDistances.at(-1),1);});
 
-test('material detail emerges and recedes continuously without an opacity threshold',()=>{let last=inkVisibility(1);for(let width=1;width<50000;width*=1.001){const current=inkVisibility(width);assert.ok(current>=0&&current<=1);assert.ok(Math.abs(current-last)<.002);last=current;}assert.ok(inkVisibility(500)>.9);assert.ok(inkVisibility(50000)<.01);});
+test('the route turns continuously at each project point',()=>{for(let i=1;i<routeCurves.length;i++){const before=routeCurves[i-1],after=routeCurves[i],a=[before[3][0]-before[2][0],before[3][1]-before[2][1]],b=[after[1][0]-after[0][0],after[1][1]-after[0][1]];const cross=Math.abs(a[0]*b[1]-a[1]*b[0])/(Math.hypot(...a)*Math.hypot(...b));assert.ok(cross<1e-8);}});
