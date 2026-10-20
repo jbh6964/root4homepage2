@@ -3,8 +3,8 @@ export const clamp = (value, min = 0, max = 1) => Math.max(min, Math.min(max, va
 export const smooth = value => { const t = clamp(value); return t * t * (3 - 2 * t); };
 export const frames = [
   { x: 430, y: 270, w: 780, h: 520, a: -6 },
-  { x: 570, y: 205, w: 66, h: 44, a: 0 },
-  { x: 211, y: 318, w: 54, h: 36, a: 0 }
+  { x: 488, y: 421, w: 3, h: 2, a: 0 },
+  { x: 155, y: 342, w: 3, h: 2, a: 0 }
 ];
 export const story = [
   { start: 0, end: 1.2, type: 'zoom', project: 0 },
@@ -32,7 +32,8 @@ export function compose(parent, child) {
     y: parent.y + s * (Math.sin(r) * child.x + Math.cos(r) * child.y),
     w: child.w * s, h: child.h * s, a: parent.a + child.a };
 }
-// The circular detail completely covers the viewport before its parent is removed.
+// A three-pixel print detail holds the next scene. Its full rectangular area
+// covers the viewport before rebasing; no separate portal shape or thumbnail.
 // Camera math always uses the current scene, never a huge accumulated scale.
 export function camera(progress, width, height) {
   const part = storyAt(progress);
@@ -49,10 +50,16 @@ export function camera(progress, width, height) {
     : { x: 390, y: 260, s: part.project === 1 ? cover : heroScale, a: 0 };
   const to = { ...end, s: cover * (part.project === 0 ? 1 : 1.7) * 780 / frame.w, a: -frame.a };
   const u = smooth(part.t), bend = Math.sin(u * Math.PI);
-  return { segment: part.project, x: from.x + (to.x - from.x) * u + bend * (part.project % 2 ? -28 : 36),
-    y: from.y + (to.y - from.y) * u + bend * 24,
-    s: Math.exp(Math.log(from.s) * (1 - u) + Math.log(to.s) * u),
-    a: from.a + (to.a - from.a) * u, ...part };
+  const s = Math.exp(Math.log(from.s) * (1 - u) + Math.log(to.s) * u);
+  // Converge in screen space as magnification rises. Linear world-space motion
+  // at microscopic scale would spend most of the journey looking at empty ink.
+  const remaining = part.project === 0 ? 1 - u : (1 - u) * from.s / s;
+  const drift = part.project === 0 ? 1 : from.s / s;
+  return { segment: part.project,
+    x: to.x + (from.x - to.x) * remaining + bend * drift * (part.project % 2 ? -28 : 36),
+    y: to.y + (from.y - to.y) * remaining + bend * drift * 24,
+    s, a: from.a + (to.a - from.a) * u, ...part };
+
 }
 export function normalizeWheel(event, height) {
   const delta = event.deltaY * (event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? height : 1);
