@@ -1,0 +1,8 @@
+export const frames=[{x:430,y:270,w:780,h:520,a:-6},{x:478,y:308,w:124,h:124*2/3,a:3},{x:65,y:44,w:19.8,h:13.2,a:-2}];
+export const rad=d=>d*Math.PI/180;
+export function compose(parent,child){const r=rad(parent.a),s=parent.w/780;return{x:parent.x+s*(Math.cos(r)*child.x-Math.sin(r)*child.y),y:parent.y+s*(Math.sin(r)*child.x+Math.cos(r)*child.y),w:child.w*s,h:child.h*s,a:parent.a+child.a};}
+export function center(f){const r=rad(f.a);return{x:f.x+Math.cos(r)*f.w/2-Math.sin(r)*f.h/2,y:f.y+Math.sin(r)*f.w/2+Math.cos(r)*f.h/2};}
+export const globalFrames=[frames[0],compose(frames[0],frames[1])];globalFrames.push(compose(globalFrames[1],{x:409,y:276,w:124.55,h:124.55*2/3,a:-2}));
+export function camera(progress,width,height){const p=Math.max(0,Math.min(3,progress)),segment=Math.min(2,Math.floor(p)),t=p-segment;const poses=[{x:800,y:500,s:Math.min(width/1600,height/1000),a:0},...globalFrames.map(f=>({...center(f),s:Math.max(width/f.w,height/f.h)*1.04,a:-f.a}))];const from=poses[segment],to=poses[segment+1];const u=t*t*(3-2*t);return{segment,x:from.x+(to.x-from.x)*u,y:from.y+(to.y-from.y)*u,s:Math.exp(Math.log(from.s)*(1-u)+Math.log(to.s)*u),a:from.a+(to.a-from.a)*u};}
+export function localCamera(cam){if(cam.segment===0)return cam;const f=globalFrames[cam.segment-1],s=f.w/780,r=rad(-f.a),dx=cam.x-f.x,dy=cam.y-f.y;return{...cam,x:(dx*Math.cos(r)-dy*Math.sin(r))/s,y:(dx*Math.sin(r)+dy*Math.cos(r))/s,s:cam.s*s,a:cam.a+f.a};}
+export function normalizeWheel(event,height){const delta=event.deltaY*(event.deltaMode===1?16:event.deltaMode===2?height:1);return Math.sign(delta)*Math.min(Math.abs(delta),110)/1400;}
