@@ -100,5 +100,22 @@ export function brandMark(index){
   `<g stroke="currentColor" stroke-width="1.4">${Array.from({length:12},(_,i)=>`<path d="M32 6V22" transform="rotate(${i*30} 32 32)"/>`).join('')}<circle cx="32" cy="32" r="3" fill="none"/></g>`,
   '<g fill="none" stroke="currentColor" stroke-width="1.1"><path d="M13 51V30a19 19 0 0 1 38 0v21ZM19 51V30a13 13 0 0 1 26 0v21M26 51V39a6 6 0 0 1 12 0v12M8 56h48"/></g>',
   `<g transform="translate(32 32)" fill="none" stroke="currentColor" stroke-width=".7">${Array.from({length:12},(_,i)=>`<ellipse rx="12" ry="26" transform="rotate(${i*15})"/>`).join('')}</g>`
- ];return `<svg class="brand-mark" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">${bodies[index]}</svg>`;
+ ];return `<svg class="brand-mark" width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">${bodies[index]}</svg>`;
+}
+
+// Unframed editions let the journey read as a composed scene of artifacts.
+// Case studies continue using the complete original identity artwork above.
+export function projectObject(index,id){
+ const frames=['280 30 470 470','0 0 340 460','350 90 410 410','0 0 370 460','230 20 530 490','160 20 590 490'];
+ let body;
+ if(index===0)body=foil(id);
+ else if(index===2)body=vinyl(id).split('<path d="M24 375')[0];
+ else if(index===4)body=hotel(id);
+ else if(index===5)body=journal(id);
+ else {
+  const lamp=index===3,w=lamp?370:340;
+  const shape=lamp?'M54 0H316Q370 0 370 54V315Q370 398 274 445L232 460H54Q0 460 0 406V54Q0 0 54 0Z':'M170 0C276 0 340 75 340 172V290C340 391 266 460 170 460S0 391 0 290V172C0 75 64 0 170 0Z';
+  body=`<defs><clipPath id="${id}-crop"><path d="${shape}"/></clipPath></defs><g clip-path="url(#${id}-crop)"><svg width="${w}" height="460" viewBox="${lamp?768:0} 0 768 1024" preserveAspectRatio="xMidYMid slice"><image href="/assets/product-studies.png" width="1536" height="1024"/></svg></g><path d="${shape}" fill="none" stroke="#eceddb" stroke-opacity=".35" stroke-width="1"/>`;
+ }
+ return `<svg class="project-object" viewBox="${frames[index]}" overflow="visible" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">${definitions(id)}${body}</svg>`;
 }

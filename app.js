@@ -1,14 +1,16 @@
 import { projects } from './projects.js';
 import { projectVisual, brandMark, projectPalettes } from './project-art.js';
 import { VectorScene } from './vector-scene.js';
+import { SceneEffects } from './scene-effects.js';
 import { END, story, stops, storyAt, camera, normalizeWheel, clamp } from './geometry.js';
 const $ = selector => document.querySelector(selector);
 const scene = $('#scene'), explorer = $('#explorer'), dialog = $('#panel'), caseStudy = $('#case-study');
 const vectorScene = new VectorScene(scene);
+const effects = new SceneEffects($('#ambient-field'),vectorScene,explorer,caseStudy);
 $('.project-index').innerHTML=projects.map((p,i)=>`<button data-project-jump="${i}" aria-label="${p.name} 프로젝트로 이동">0${i+1}</button>`).join('');
 
 function card(index,frame){const element=document.createElement('div');element.className='art '+projects[index].type;element.style.cssText=`left:${frame.x}px;top:${frame.y}px;width:${frame.w}px;height:${frame.h}px;transform:rotate(${frame.a}deg)`;element.innerHTML=projectVisual(index);return element;}
-// Keep ambient animation phases continuous when a nested scene is rebased.
+// Keep ambient motion continuous across case-study mounts and pauses.
 const motionOrigin=performance.now();
 let motionPausedAt=null,motionPausedTotal=0;
 function syncMotionClock(){
@@ -16,6 +18,7 @@ function syncMotionClock(){
  if(halted&&motionPausedAt===null)motionPausedAt=now;
  else if(!halted&&motionPausedAt!==null){motionPausedTotal+=now-motionPausedAt;motionPausedAt=null;}
  vectorScene.setPaused(halted);
+ effects.setState({paused:halted,enabled:!fallback.matches});
 }
 function synchronizeAnimations(root){
  const time=(motionPausedAt??performance.now())-motionOrigin-motionPausedTotal;
@@ -26,6 +29,11 @@ function digital(index) {
  const p=projects[index],heads=['Better, together.','Your daily ritual.','Find your frequency.','A softer kind of bright.','Make yourself at home.','Open to new ideas.'];
  return `<div class="browser-mock"><div class="browser-toolbar"><i></i><i></i><i></i><span>${p.short} / digital experience</span></div><div class="browser-body theme-${index}"><nav><b>${p.short}</b><span>Discover　 Studio　 ↗</span></nav><span class="browser-eyebrow">${p.category} — ${p.year}</span><div class="browser-headline">${p.title.replaceAll('\n','<br>')}</div><div class="browser-visual">${projectVisual(index)}</div><div class="browser-stamp">${brandMark(index)}<span>AN INDEPENDENT<br>POINT OF VIEW.</span></div><span class="browser-bottom">EXPLORE THE POSSIBILITIES <b>↓</b></span></div></div><div class="phone-mock theme-${index}"><div class="phone-status"><span>9:41</span><span>● ▰</span></div><span>${p.short}<i>☰</i></span><div class="phone-visual">${brandMark(index)}</div><b>${heads[index]}</b><p>${p.category}</p><div class="phone-ui-line"></div><div class="phone-ui-line short"></div><small>DISCOVER MORE　↗</small></div>`;
 }
+scene.addEventListener('projectfocus',event=>{
+ const index=event.detail,caption=$('#focus-caption'),active=index>=0&&current<.5&&!paused;
+ caption.classList.toggle('visible',active);
+ if(active){caption.querySelector('span').textContent='SELECTED WORK / 0'+(index+1);caption.querySelector('strong').textContent=projects[index].name;caption.querySelector('p').textContent=projects[index].role;}
+});
 let caseIndex=-1;
 function mountCase(index) {
  const p=projects[index];
@@ -40,7 +48,10 @@ const fallback=matchMedia('(max-width:700px), (prefers-reduced-motion: reduce)')
 function render() {
  const cam=camera(current,innerWidth,innerHeight), part=storyAt(current);
  vectorScene.render(cam,innerWidth,innerHeight,((motionPausedAt??performance.now())-motionOrigin-motionPausedTotal)/1000,document.body.matches('.motion-paused,.motion-off,.tab-hidden')||fallback.matches);
+ effects.update(cam,innerWidth,innerHeight);
  const inCase=part.type==='detail';
+ document.body.classList.toggle('in-detail',inCase);
+ $('.scene-colophon').style.opacity=clamp(1-current/.7);
  $('#journey-end').hidden=!(part.type==='outro'&&part.t>.8);
  $('#flow-map').classList.toggle('reading',inCase);
  if(inCase && caseIndex!==part.project)mountCase(part.project);
@@ -51,9 +62,10 @@ function render() {
    $('.case-track').style.transform=`translate3d(0,${-part.t*innerHeight*travel}px,0)`;
    caseStudy.querySelectorAll('[data-parallax]').forEach(el=>{el.style.transform=`translate3d(0,${(part.t-.5)*innerHeight*Number(el.dataset.parallax)}px,0)`;});
  }
- $('.intro').style.opacity=current<.12?1:0;
- $('.intro').inert=current>=.12;
- $('.explore-hint').style.opacity=current<.1?1:0;
+ $('.intro').style.opacity=clamp(1-current/.7);
+ $('.intro').inert=current>=.5;
+ $('.explore-hint').style.opacity=clamp(1-current/.4);
+ if(current>=.5)$('#focus-caption').classList.remove('visible');
  const count=current<story.find(p=>p.type==='detail').start?0:part.project+1;
  $('#position').textContent=`0${count} / ${String(projects.length).padStart(2,'0')}`;
  $('#chapter-label').textContent=part.type==='overview'?'SELECTED WORKS — THE WHOLE JOURNEY':part.type==='journey'?'FOLLOWING THE FLOW':`${projects[part.project].name} — ${inCase?'CASE STUDY':'SELECTED WORK'}`;
@@ -71,7 +83,7 @@ $('#flow-overview').onclick=$('#restart-flow').onclick=()=>{target=0;wake();};
 $('#forward').onclick=()=>{target=stops.find(stop=>stop>target+.001)??END;wake();};
 $('#back').onclick=()=>{target=stops.findLast(stop=>stop<target-.001)??0;wake();};
 $('.logo').onclick=event=>{event.preventDefault();target=0;wake();if(fallback.matches)window.scrollTo({top:0,behavior:'instant'});};
-const panels={about:'<h2 id="panel-title">Good work.<br>Better together.</h2><p>root4는 브랜드의 본질을 발견하고, 시각 언어와 디지털 경험으로 연결하는 독립 디자인 스튜디오입니다.</p><p>브랜딩, 아트 디렉션, 웹 디자인과 실험적인 인터랙션을 함께 다룹니다.</p><p class="panel-note">SEOUL, KR · INDEPENDENT DESIGN PRACTICE<br>현재 프로젝트와 상세 설명은 디자인 콘셉트를 보여 주는 샘플입니다.</p>',lab:'<h2 id="panel-title">Always<br>in motion.</h2><p>정지된 이미지 너머, 움직임이 만드는 새로운 감각을 탐색합니다.</p><p>01 — Nested stories<br>전체 여정을 먼저 보고 경로를 따라 프로젝트 지점을 통과하는 탐색.</p><p>02 — Living identities<br>같은 공간 안에서 연결되는 브랜드, 패키지와 디지털 경험.</p><p>03 — Different perspectives<br>레이어마다 다른 속도로 전개되는 프로젝트 스토리.</p>',contact:'<h2 id="panel-title">Let’s make<br>something matter.</h2><p>브랜드와 디지털 경험에 관한 새로운 협업을 기다립니다.</p><p>연락처는 준비 중입니다.</p><p class="panel-note">BASED IN SEOUL · OPEN TO THE WORLD</p>'};
+const panels={about:'<h2 id="panel-title">Good work.<br>Better together.</h2><p>root4는 브랜드의 본질을 발견하고, 시각 언어와 디지털 경험으로 연결하는 독립 디자인 스튜디오입니다.</p><p>브랜딩, 아트 디렉션, 웹 디자인과 실험적인 인터랙션을 함께 다룹니다.</p><p class="panel-note">SEOUL, KR · INDEPENDENT DESIGN PRACTICE<br>현재 프로젝트와 상세 설명은 디자인 콘셉트를 보여 주는 샘플입니다.</p>',lab:'<h2 id="panel-title">Always<br>in motion.</h2><p>정지된 이미지 너머, 움직임이 만드는 새로운 감각을 탐색합니다.</p><p>01 — Connected perspectives<br>전체 여정을 먼저 보고 경로를 따라 프로젝트 지점을 통과하는 탐색.</p><p>02 — Living identities<br>같은 공간 안에서 연결되는 브랜드, 패키지와 디지털 경험.</p><p>03 — Different perspectives<br>레이어마다 다른 속도로 전개되는 프로젝트 스토리.</p>',contact:'<h2 id="panel-title">Let’s make<br>something matter.</h2><p>브랜드와 디지털 경험에 관한 새로운 협업을 기다립니다.</p><p>연락처는 준비 중입니다.</p><p class="panel-note">BASED IN SEOUL · OPEN TO THE WORLD</p>'};
 let opener;
 document.querySelectorAll('[data-panel]').forEach(button=>button.onclick=()=>{opener=button;paused=true;target=current;if(raf)cancelAnimationFrame(raf);raf=0;document.body.classList.add('motion-paused');syncMotionClock();$('#panel-content').innerHTML=panels[button.dataset.panel];dialog.showModal();$('#close-panel').focus();});
 $('#close-panel').onclick=()=>dialog.close();
@@ -87,4 +99,4 @@ function resize(){syncMotionClock();document.querySelectorAll('.art-list').forEa
 window.addEventListener('resize',resize);fallback.addEventListener('change',resize);resize();
 $('#toggle-motion').onclick=()=>{const off=document.body.classList.toggle('motion-off');syncMotionClock();$('#toggle-motion').setAttribute('aria-pressed',String(off));$('#toggle-motion').setAttribute('aria-label',off?'반복 모션 재생':'반복 모션 일시 정지');$('#toggle-motion').textContent=off?'MOTION OFF ▷':'MOTION ON Ⅱ';};
 document.addEventListener('visibilitychange',()=>{document.body.classList.toggle('tab-hidden',document.hidden);syncMotionClock();});
-window.__zoom={get progress(){return current;},get target(){return target;},get paused(){return paused;},get chapter(){return storyAt(current);},end:END};
+window.__zoom={get progress(){return current;},get target(){return target;},get paused(){return paused;},get chapter(){return storyAt(current);},get visual(){return effects.state;},end:END};
