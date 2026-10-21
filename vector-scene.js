@@ -50,8 +50,8 @@ export class VectorScene{
   this.balance=this.stations[1];this.balanceLine=this.balance.querySelector('[data-balance-line]');this.total=this.balance.querySelector('[data-balance-total]');this.arcs=[...this.balance.querySelectorAll('[data-balance-arc]')].map(node=>({node,dashes:node.getAttribute('stroke-dasharray').split(' ').map(Number)}));
   this.svg.querySelectorAll('[data-plan],[data-film],[data-product-focus]').forEach(n=>n.style.cursor='pointer');
   this.svg.addEventListener('click',e=>{if(this.paused||this.part?.type!=='arrival')return;const hit=e.target.closest('[data-plan],[data-film],[data-product-focus]');if(!hit)return;const index=this.part.project,choice=Number(hit.dataset.plan??hit.dataset.film??hit.dataset.productFocus);this.svg.dispatchEvent(new CustomEvent('scene-choice',{detail:{index,choice}}));});
-  this.balance.querySelectorAll('[data-balance-hit],[data-balance-month-hit]').forEach(hit=>{
-   hit.addEventListener('pointerenter',e=>{if(this.paused||this.part?.type!=='arrival'||this.part.project!==1||e.pointerType==='touch')return;const kind=hit.hasAttribute('data-balance-hit')?'asset':'month',index=Number(kind==='asset'?hit.dataset.balanceHit:hit.dataset.balanceMonthHit);this.svg.dispatchEvent(new CustomEvent('scene-inspect',{detail:{kind,index,x:e.clientX,y:e.clientY}}));});
+  this.balance.querySelectorAll('[data-balance-hit],[data-balance-flow-hit]').forEach(hit=>{
+   hit.addEventListener('pointerenter',e=>{if(this.paused||this.part?.type!=='arrival'||this.part.project!==1||e.pointerType==='touch')return;const kind=hit.hasAttribute('data-balance-hit')?'asset':'flow',index=Number(kind==='asset'?hit.dataset.balanceHit:hit.dataset.balanceFlowHit);this.svg.dispatchEvent(new CustomEvent('scene-inspect',{detail:{kind,index,x:e.clientX,y:e.clientY}}));});
    hit.addEventListener('pointerleave',()=>this.svg.dispatchEvent(new CustomEvent('scene-inspect',{detail:null})));
   });
  }
@@ -59,15 +59,15 @@ export class VectorScene{
  focus(){}
  setReveal(index,value){
   if(this.reveals[index]===value)return;this.reveals[index]=value;
-  if(index===1){const chart=1-Math.pow(1-clamp((value-.25)/.7),3);this.balanceLine.setAttribute('stroke-dasharray',`${chart} 1`);this.total.textContent=won(balanceData.months[0]+(balanceData.total-balanceData.months[0])*chart);this.arcs.forEach(({node,dashes:[length,gap]})=>node.setAttribute('stroke-dasharray',`${length*chart} ${gap+length*(1-chart)}`));}
+  if(index===1){const chart=1-Math.pow(1-clamp((value-.25)/.7),3);this.balanceLine.setAttribute('stroke-dasharray',`${chart} 1`);this.total.textContent=won(balanceData.flow[0]+(balanceData.total-balanceData.flow[0])*chart);this.arcs.forEach(({node,dashes:[length,gap]})=>node.setAttribute('stroke-dasharray',`${length*chart} ${gap+length*(1-chart)}`));}
  }
  select(index,choice){const root=this.stations[index];
   if(index===0){root.querySelectorAll('[data-plan]').forEach((node,i)=>{node.querySelector('[data-plan-surface]').setAttribute('fill',i===choice?'#dfe7ff':'#f0f2f7');node.querySelector('[data-plan-surface]').setAttribute('stroke',i===choice?'#5268ed':'#e8eaf0');node.querySelector('[data-plan-check]').setAttribute('fill',i===choice?'#3d55ed':'#dce1ee');});root.querySelector('[data-connect-selected]').textContent=plans[choice].name+' · '+plans[choice].data+(choice<2?'GB':'');root.querySelector('[data-connect-remaining]').textContent=['9.8','32.8','∞'][choice];root.querySelector('[data-connect-unit]').textContent=choice<2?'GB':'';root.querySelector('[data-connect-percent]').textContent=['65.3%','65.6%','무제한'][choice];root.querySelector('[data-connect-ring]').setAttribute('stroke-dasharray',`${choice===2?371:choice===0?242:243} 371`);}
   if(index===2){root.querySelector('[data-film-title]').textContent=films[choice].name;root.querySelector('[data-film-sub]').textContent=films[choice].sub;root.querySelector('[data-film-genre]').textContent=films[choice].genre;root.querySelectorAll('[data-film-focus]').forEach((n,i)=>n.setAttribute('stroke',i===choice?'#ffe3be':'transparent'));root.querySelector('[data-film-image]').setAttribute('href','/assets/'+filmImages[choice]);}
   if(index===3){const p=products[choice];for(const [key,value]of Object.entries({title:p.name,kr:p.kr,price:p.price+'원',color:p.color}))root.querySelector('[data-product-'+key+']').textContent=value;root.querySelectorAll('[data-product-focus]').forEach((n,i)=>n.setAttribute('opacity',i===choice?1:0));}
-  if(index===4)root.querySelectorAll('[data-relay-view]').forEach(n=>n.setAttribute('opacity',n.dataset.relayView===(choice?'timeline':'board')?1:0));
+  if(index===4)root.querySelectorAll('[data-relay-view]').forEach(n=>n.setAttribute('opacity',n.dataset.relayView===(choice?'owners':'board')?1:0));
  }
- highlightBalance(kind,index){this.arcs.forEach(({node},i)=>node.style.opacity=(kind==='asset'&&i!==index) ? .25 : 1);this.balance.querySelectorAll('[data-balance-month]').forEach((n,i)=>n.setAttribute('r',kind==='month'&&i===index?6:3.5));}
+ highlightBalance(kind,index){this.arcs.forEach(({node},i)=>node.style.opacity=(kind==='asset'&&i!==index) ? .25 : 1);this.balance.querySelectorAll('[data-balance-flow]').forEach((n,i)=>n.setAttribute('r',kind==='flow'&&i===index?6:3.5));}
  render(cam,width,height,progress,paused){
   this.cam=cam;this.part=storyAt(progress);this.paused=paused;const part=this.part;
   this.svg.setAttribute('viewBox',`0 0 ${width} ${height}`);this.svg.dataset.camera=`${cam.x},${cam.y},${cam.s}`;

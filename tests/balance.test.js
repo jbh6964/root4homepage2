@@ -7,7 +7,7 @@ test('example asset shares and amounts reconcile with the displayed total',()=>{
  assert.equal(balanceData.assets.reduce((sum,item)=>sum+item.amount,0),balanceData.total);
  assert.equal(balanceData.assets.reduce((sum,item)=>sum+item.share,0),100);
  for(const item of balanceData.assets)assert.equal(item.amount/balanceData.total*100,item.share);
- assert.equal(balanceData.months.at(-1),balanceData.total);
+ assert.equal(balanceData.flow.at(-1),balanceData.total);
 });
 test('arrival resolves within 1.05 seconds and holds without moving the camera',()=>{
  const clock=new ArrivalSequence();
