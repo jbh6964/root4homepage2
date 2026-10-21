@@ -1,28 +1,68 @@
-// A textured fluid surface. Pointer velocity displaces only the nearby material;
-// the camera and HTML click targets are never part of this simulation.
-const vertex=`attribute vec2 position;varying vec2 uv;void main(){uv=position*.5+.5;gl_Position=vec4(position,0.,1.);}`;
-const fragment=`precision highp float;varying vec2 uv;uniform sampler2D image;uniform vec2 resolution;uniform vec2 centre;uniform vec2 size;uniform vec2 pointer;uniform vec2 velocity;uniform float energy;uniform float time;uniform float alpha;uniform vec3 tint;uniform float tintMix;
- void main(){vec2 pixel=vec2(uv.x,1.-uv.y)*resolution;vec2 p=(pixel-centre)/size+.5;vec2 mouse=(pointer-centre)/size+.5;vec2 delta=p-mouse;float radius=length(delta);float local=exp(-dot(delta,delta)*24.);vec2 wave=delta/(radius+.03)*sin(radius*42.-time*2.)*local*energy*.009;p+=wave+velocity*local*.018; if(p.x<0.||p.x>1.||p.y<0.||p.y>1.){gl_FragColor=vec4(0.);return;}vec4 col=texture2D(image,p);vec3 material=mix(col.rgb,tint*(.35+dot(col.rgb,vec3(.3,.5,.2))),tintMix);material+=local*energy*.08;gl_FragColor=vec4(material*col.a*alpha,col.a*alpha);}`;
+import {clamp,smooth} from './geometry.js';
+
+// Project material is a static image layer positioned only by the scroll camera.
+// The entrance has its own geometry; this material is never present in the intro.
+const presets=[
+ {x:.69,y:.49,scale:1.24,alpha:1,tint:[.3,.4,1],mix:0},
+ {x:1.05,y:.51,scale:1.15,alpha:.92,tint:[.3,.4,1],mix:0},
+ {x:.90,y:.50,scale:1.15,alpha:0,tint:[.6,.4,.8],mix:.5},
+ {x:1.2,y:.95,scale:1.15,alpha:.62,tint:[.3,.4,1],mix:0},
+ {x:-.12,y:.51,scale:1.15,alpha:.92,tint:[.8,.84,.3],mix:.8},
+ {x:1.05,y:1.03,scale:1.15,alpha:.92,tint:[1,.34,.17],mix:.8},
+ {x:.8,y:.48,scale:1.2,alpha:1,tint:[.3,.4,1],mix:0}
+];
+
 export class SceneEffects{
- constructor(canvas,scene,container){
-  this.canvas=canvas;this.scene=scene;this.container=container;this.pointer={x:0,y:0};this.target={x:0,y:0};this.velocity={x:0,y:0};this.energy=0;this.phase=0;this.raf=0;this.paused=false;this.enabled=false;this.fine=matchMedia('(hover:hover) and (pointer:fine)');
-  this.gl=canvas.getContext('webgl',{alpha:true,premultipliedAlpha:true,antialias:false,preserveDrawingBuffer:false});
-  if(this.gl)this.initGL();else{this.ctx=canvas.getContext('2d');this.canvas.classList.add('canvas-fallback');}
-  this.image=new Image();this.image.onload=()=>{this.ready=true;if(this.gl){const gl=this.gl;gl.bindTexture(gl.TEXTURE_2D,this.texture);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,this.image);}this.draw();};this.image.src='/assets/studio-fluid.webp';
-  container.addEventListener('pointermove',e=>{if(!this.enabled||this.paused||!this.fine.matches||e.pointerType==='touch')return;const x=e.clientX/innerWidth*2-1,y=e.clientY/innerHeight*2-1,now=performance.now(),dt=Math.max(12,now-(this.pointerTime||now));this.velocity.x=Math.max(-1,Math.min(1,(x-this.target.x)*600/dt));this.velocity.y=Math.max(-1,Math.min(1,(y-this.target.y)*600/dt));this.energy=Math.min(1,this.energy+Math.hypot(x-this.target.x,y-this.target.y)*3);this.target={x,y};this.pointerTime=now;},{passive:true});
-  container.addEventListener('pointerleave',()=>{if(!this.paused)this.target={x:0,y:0};});this.frame=this.frame.bind(this);
+ constructor(canvas){
+  this.canvas=canvas;this.ctx=canvas.getContext('2d');this.paused=false;this.enabled=false;this.alpha=0;this.materials=new Map();
+  this.image=new Image();this.image.onload=()=>{this.ready=true;this.draw();};this.image.src='/assets/studio-fluid.webp';
  }
- initGL(){const gl=this.gl;const shader=(type,source)=>{const sh=gl.createShader(type);gl.shaderSource(sh,source);gl.compileShader(sh);if(!gl.getShaderParameter(sh,gl.COMPILE_STATUS))throw Error(gl.getShaderInfoLog(sh));return sh;};const program=gl.createProgram();gl.attachShader(program,shader(gl.VERTEX_SHADER,vertex));gl.attachShader(program,shader(gl.FRAGMENT_SHADER,fragment));gl.linkProgram(program);gl.useProgram(program);this.program=program;const buffer=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,buffer);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,-1,1,1,-1,1,1]),gl.STATIC_DRAW);const location=gl.getAttribLocation(program,'position');gl.enableVertexAttribArray(location);gl.vertexAttribPointer(location,2,gl.FLOAT,false,0,0);this.uniforms={};for(const name of['image','resolution','centre','size','pointer','velocity','energy','time','alpha','tint','tintMix'])this.uniforms[name]=gl.getUniformLocation(program,name);this.texture=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,this.texture);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);gl.uniform1i(this.uniforms.image,0);}
- setState({paused,enabled}){this.paused=paused;this.enabled=enabled;if(paused||!enabled){cancelAnimationFrame(this.raf);this.raf=0;this.last=0;}else this.wake();if(!enabled){this.pointer={x:0,y:0};this.target={x:0,y:0};this.scene.setPointer(0,0);}}
- update(cam,width,height){this.cam=cam;this.width=width;this.height=height;const dpr=Math.min(devicePixelRatio||1,1.5);const w=Math.round(width*dpr),h=Math.round(height*dpr);if(this.canvas.width!==w||this.canvas.height!==h){this.canvas.width=w;this.canvas.height=h;if(this.gl)this.gl.viewport(0,0,w,h);}if(this.paused)this.draw();this.wake();}
- wake(){if(this.enabled&&!this.paused&&!this.raf)this.raf=requestAnimationFrame(this.frame);}
- frame(now){this.raf=0;if(!this.enabled||this.paused)return;const dt=Math.min(40,this.last?now-this.last:16);this.last=now;this.phase+=dt*.001;const ease=1-Math.exp(-dt/150);this.pointer.x+=(this.target.x-this.pointer.x)*ease;this.pointer.y+=(this.target.y-this.pointer.y)*ease;this.energy*=Math.exp(-dt/350);this.velocity.x*=Math.exp(-dt/240);this.velocity.y*=Math.exp(-dt/240);this.scene.setPointer(this.pointer.x,this.pointer.y,this.energy);this.draw();this.wake();}
- draw(){if(!this.ready||!this.cam||!this.enabled)return;const {width:w,height:h,cam}=this;
-  const presets=[{x:.69,y:.49,scale:1.24,alpha:1,tint:[.3,.4,1],mix:0},{x:1.05,y:.51,scale:1.15,alpha:.92,tint:[.3,.4,1],mix:0},{x:.90,y:.50,scale:1.15,alpha:0,tint:[.6,.4,.8],mix:.5},{x:1.2,y:.95,scale:1.15,alpha:.62,tint:[.3,.4,1],mix:0},{x:-.12,y:.51,scale:1.15,alpha:.92,tint:[.8,.84,.3],mix:.8},{x:1.05,y:1.03,scale:1.15,alpha:.92,tint:[1,.34,.17],mix:.8},{x:.8,y:.48,scale:1.2,alpha:1,tint:[.3,.4,1],mix:0}];
+ setState({paused,enabled}){
+  this.paused=paused;this.enabled=enabled;
+  if(!enabled){this.alpha=0;this.ctx?.clearRect(0,0,this.canvas.width,this.canvas.height);}
+ }
+ update(cam,width,height){
+  this.cam=cam;this.width=width;this.height=height;
+  const dpr=Math.min(devicePixelRatio||1,1.5),w=Math.round(width*dpr),h=Math.round(height*dpr);
+  if(this.canvas.width!==w||this.canvas.height!==h){this.canvas.width=w;this.canvas.height=h;}
+  this.draw();
+ }
+ material(tint,amount){
+  if(!amount)return this.image;
+  const key=tint.join(',')+':'+amount;
+  if(this.materials.has(key))return this.materials.get(key);
+  const surface=document.createElement('canvas');surface.width=this.image.naturalWidth;surface.height=this.image.naturalHeight;
+  const ctx=surface.getContext('2d');ctx.drawImage(this.image,0,0);
+  const pixels=ctx.getImageData(0,0,surface.width,surface.height),data=pixels.data;
+  for(let i=0;i<data.length;i+=4){
+   const light=.35+(data[i]*.3+data[i+1]*.5+data[i+2]*.2)/255;
+   for(let c=0;c<3;c++)data[i+c]=data[i+c]*(1-amount)+tint[c]*255*light*amount;
+  }
+  ctx.putImageData(pixels,0,0);this.materials.set(key,surface);return surface;
+ }
+ draw(){
+  if(!this.ctx||!this.cam)return;
+  const ctx=this.ctx,{width:w,height:h,cam}=this,dpr=this.canvas.width/w;
+  ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,w,h);this.alpha=0;
+  if(!this.enabled||!this.ready||cam.type==='intro')return;
   let from,to,t;
-  if(cam.type==='intro'){from=to=presets[0];t=0;}else if(cam.type==='outro'){from=presets[5];to=presets[6];t=Math.min(1,cam.t*1.7);}else if(cam.type==='journey'){from=presets[cam.project];to=presets[cam.project+1];t=cam.t;}else{from=to=presets[cam.project+1];t=1;}
-  t=t*t*(3-2*t);const mix=(a,b)=>a+(b-a)*t,scale=mix(from.scale,to.scale)*(.94+.06*cam.zoom),width=w*scale,height=width*2/3;
-  const cx=w*(mix(from.x,to.x)+Math.sin(cam.routeDistance*Math.PI*3)*.06)+this.pointer.x*14,cy=h*(mix(from.y,to.y)+Math.sin(cam.routeDistance*Math.PI*2)*.045)+this.pointer.y*9,alpha=mix(from.alpha,to.alpha),tint=from.tint.map((v,i)=>mix(v,to.tint[i])),tintMix=mix(from.mix,to.mix);
-  if(this.gl){const gl=this.gl,u=this.uniforms;gl.clearColor(0,0,0,0);gl.clear(gl.COLOR_BUFFER_BIT);gl.useProgram(this.program);gl.uniform2f(u.resolution,w,h);gl.uniform2f(u.centre,cx,cy);gl.uniform2f(u.size,width,height);gl.uniform2f(u.pointer,(this.pointer.x+1)*w/2,(this.pointer.y+1)*h/2);gl.uniform2f(u.velocity,this.velocity.x,this.velocity.y);gl.uniform1f(u.energy,this.energy);gl.uniform1f(u.time,this.phase);gl.uniform1f(u.alpha,alpha);gl.uniform3fv(u.tint,tint);gl.uniform1f(u.tintMix,tintMix);gl.drawArrays(gl.TRIANGLES,0,6);}else if(this.ctx){const ctx=this.ctx,d=this.canvas.width/w;ctx.setTransform(d,0,0,d,0,0);ctx.clearRect(0,0,w,h);ctx.globalAlpha=alpha;ctx.drawImage(this.image,cx-width/2,cy-height/2,width,height);}}
- get state(){return{phase:this.phase,paused:this.paused,enabled:this.enabled,pointer:{...this.pointer},target:{...this.target},energy:this.energy,renderer:this.gl?'webgl':'canvas'};}
+  if(cam.type==='outro'){from=presets[5];to=presets[6];t=clamp(cam.t*1.7);}
+  else if(cam.type==='journey'){from=presets[cam.project];to=presets[cam.project+1];t=cam.t;}
+  else{from=to=presets[cam.project+1];t=1;}
+  t=smooth(t);const mix=(a,b)=>a+(b-a)*t;
+  const scale=mix(from.scale,to.scale)*(.94+.06*cam.zoom),width=w*scale,height=width*2/3;
+  const cx=w*(mix(from.x,to.x)+Math.sin(cam.routeDistance*Math.PI*3)*.06),cy=h*(mix(from.y,to.y)+Math.sin(cam.routeDistance*Math.PI*2)*.045);
+  this.alpha=mix(from.alpha,to.alpha)*(cam.type==='journey'&&cam.project===0?smooth(clamp((cam.t-.35)/.5)):1);
+  if(this.alpha<=0)return;
+  // Cache the settled project tints, then composite them during travel. The
+  // source texture stays sharp and the UI is never displaced or distorted.
+  const first=this.material(from.tint,from.mix),second=this.material(to.tint,to.mix);
+  if(first===second){ctx.globalAlpha=this.alpha;ctx.drawImage(first,cx-width/2,cy-height/2,width,height);}
+  else{
+   ctx.globalAlpha=this.alpha*(1-t);ctx.drawImage(first,cx-width/2,cy-height/2,width,height);
+   ctx.globalAlpha=this.alpha*t;ctx.drawImage(second,cx-width/2,cy-height/2,width,height);
+  }
+  ctx.globalAlpha=1;
+ }
+ get state(){return{phase:0,paused:this.paused,enabled:this.enabled,pointer:{x:0,y:0},target:{x:0,y:0},energy:0,renderer:'canvas',alpha:this.alpha};}
 }
