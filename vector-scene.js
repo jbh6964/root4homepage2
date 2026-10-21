@@ -1,4 +1,4 @@
-import {routePath,projectStations,clamp,smooth,storyAt} from './geometry.js';
+import {projectStations,clamp,smooth,storyAt} from './geometry.js';
 import {projectObject,plans,products,films,filmImages} from './project-art.js';
 import {balanceData,won} from './balance-art.js';
 import {entranceState} from './entrance-scene.js';
@@ -17,22 +17,36 @@ export function stagePose(index,cam,width,height){
  return{x:width*c.x+driftX,y:height*c.y+driftY,s:fit*cam.zoom/(4.5+index*.35),a:0};
 }
 export function scenePose(index,cam,width,height){
- const i=index,part=cam;
- const active=(part.type==='arrival'||part.type==='journey')&&part.project===i,departing=(part.type==='journey'&&part.project===i+1&&part.t<.42)||(part.type==='outro'&&i===projectStations.length-1&&part.t<.42);
- const pose=stagePose(i,cam,width,height);
+ const part=cam,pose=stagePose(index,cam,width,height),active=(part.type==='arrival'||part.type==='journey')&&part.project===index;
+ const departing=(part.type==='journey'&&part.project===index+1&&part.t<.52)||(part.type==='outro'&&index===projectStations.length-1&&part.t<.52);
  if(!active&&!departing)return{...pose,visible:false,opacity:0};
  let opacity=1;
- if(part.type==='journey'&&active){const e=smooth(clamp((part.t-.06)/.94)),station=projectStations[i],rawX=clamp(width/2+(station.x-cam.x)*cam.s,width*.2,width*1.07),rawY=clamp(height/2+(station.y-cam.y)*cam.s,height*.35,height*.83);pose.x=mix(rawX,pose.x,e);pose.y=mix(rawY,pose.y,e);pose.s*=mix(.82,1,e);pose.a=(i%2?-9:8)*(1-e);opacity=clamp(part.t/.12);if(i===0)opacity*=entranceState(part).projectReveal;}
- if(departing){const e=smooth(part.t/.42);pose.x-=width*e*.95;pose.y+=height*e*.18;pose.s*=1+e*.35;pose.a=-8*e;opacity=1-e;}
+ if(part.type==='journey'&&active){
+  const delay=index===0?.28:0,e=smooth((part.t-delay)/(1-delay)),field=entranceState(cam),station=projectStations[index];
+  const sourceX=width*field.focusX+clamp((station.x-cam.x)*cam.s*.025,-width*.07,width*.07);
+  const sourceY=height*field.focusY+clamp((station.y-cam.y)*cam.s*.025,-height*.06,height*.06);
+  pose.x=mix(sourceX,pose.x,e);pose.y=mix(sourceY,pose.y,e);
+  pose.s*=mix(.12,1,e);pose.a=(index%2?-4:4)*(1-e);
+  opacity=smooth((part.t-delay)/.20);
+ }
+ if(departing){
+  const e=smooth(part.t/.52),side=index===3?1:-1;
+  pose.x+=side*width*1.95*e;pose.y+=height*.12*e;pose.s*=1+.65*e;pose.a=side*5*e;
+  opacity=1-smooth((e-.7)/.3);
+ }
  return{...pose,visible:opacity>0,opacity};
 }
+export function captionOpacity(cam){
+ return cam.type==='arrival'?smooth(cam.t/.09)*(1-smooth((cam.t-.87)/.13)):0;
+}
+
 export class VectorScene{
  constructor(container){
   this.svg=document.createElementNS(NS,'svg');this.svg.classList.add('zoom-world');this.svg.setAttribute('aria-hidden','true');
-  this.svg.innerHTML=`<g data-route><path d="${routePath}" fill="none" stroke="currentColor" stroke-width="1" vector-effect="non-scaling-stroke"/></g>${projectStations.map((station,i)=>{const c=stageLayouts[i];return `<g data-station="${i}" opacity="0" style="display:none"><g data-primary-layout="${i}"><g data-project-depth="${i}"><svg width="${c.nativeW}" height="${c.nativeH}" overflow="visible">${projectObject(i,'scene-'+i)}</svg></g></g></g>`;}).join('')}`;
+  this.svg.innerHTML=`${projectStations.map((station,i)=>{const c=stageLayouts[i];return `<g data-station="${i}" opacity="0" style="display:none"><g data-primary-layout="${i}"><g data-project-depth="${i}"><svg width="${c.nativeW}" height="${c.nativeH}" overflow="visible">${projectObject(i,'scene-'+i)}</svg></g></g></g>`;}).join('')}`;
   container.replaceChildren(this.svg);
-  this.stations=[...this.svg.querySelectorAll('[data-station]')];this.layouts=[...this.svg.querySelectorAll('[data-primary-layout]')];this.depths=[...this.svg.querySelectorAll('[data-project-depth]')];this.route=this.svg.querySelector('[data-route]');
-  this.artLayers=this.stations.map(root=>[...root.querySelectorAll('[data-art-layer],[data-balance-layer]')]);this.artLayers.flat().forEach(n=>n.dataset.baseTransform=n.getAttribute('transform')||'');this.reveals=Array(5).fill(1);
+  this.stations=[...this.svg.querySelectorAll('[data-station]')];this.layouts=[...this.svg.querySelectorAll('[data-primary-layout]')];
+  this.reveals=Array(5).fill(1);
   this.balance=this.stations[1];this.balanceLine=this.balance.querySelector('[data-balance-line]');this.total=this.balance.querySelector('[data-balance-total]');this.arcs=[...this.balance.querySelectorAll('[data-balance-arc]')].map(node=>({node,dashes:node.getAttribute('stroke-dasharray').split(' ').map(Number)}));
   this.svg.querySelectorAll('[data-plan],[data-film],[data-product-focus]').forEach(n=>n.style.cursor='pointer');
   this.svg.addEventListener('click',e=>{if(this.paused||this.part?.type!=='arrival')return;const hit=e.target.closest('[data-plan],[data-film],[data-product-focus]');if(!hit)return;const index=this.part.project,choice=Number(hit.dataset.plan??hit.dataset.film??hit.dataset.productFocus);this.svg.dispatchEvent(new CustomEvent('scene-choice',{detail:{index,choice}}));});
@@ -43,17 +57,6 @@ export class VectorScene{
  }
  setPaused(value){this.paused=value;}
  focus(){}
- // Arrival settling is independent of the scroll camera. No mouse position is
- // stored or applied: completed compositions remain still while users read.
- positionLayers(){
-  this.depths.forEach((node,i)=>{if(this.stations[i].style.display==='none')return;
-   const reveal=this.reveals[i],settle=1-Math.pow(1-clamp((reveal-.06)/.7),3);
-   this.artLayers[i].forEach(layer=>{const kind=layer.dataset.artLayer||layer.dataset.balanceLayer;
-    if(kind==='type'||kind==='caption')return;
-    layer.setAttribute('transform',`translate(0 ${(1-settle)*(kind==='ribbon'?-14:21)}) ${layer.dataset.baseTransform}`);
-   });
-  });
- }
  setReveal(index,value){
   if(this.reveals[index]===value)return;this.reveals[index]=value;
   if(index===1){const chart=1-Math.pow(1-clamp((value-.25)/.7),3);this.balanceLine.setAttribute('stroke-dasharray',`${chart} 1`);this.total.textContent=won(balanceData.months[0]+(balanceData.total-balanceData.months[0])*chart);this.arcs.forEach(({node,dashes:[length,gap]})=>node.setAttribute('stroke-dasharray',`${length*chart} ${gap+length*(1-chart)}`));}
@@ -68,7 +71,9 @@ export class VectorScene{
  render(cam,width,height,progress,paused){
   this.cam=cam;this.part=storyAt(progress);this.paused=paused;const part=this.part;
   this.svg.setAttribute('viewBox',`0 0 ${width} ${height}`);this.svg.dataset.camera=`${cam.x},${cam.y},${cam.s}`;
-  this.route.setAttribute('transform',`translate(${width/2-cam.x*cam.s} ${height/2-cam.y*cam.s}) scale(${cam.s})`);this.route.style.opacity=part.type==='journey'?String(.16*entranceState(part).projectReveal):'0';
+  const foreground=part.type==='journey'&&part.project>0?part.project-1:null;
+  if(foreground!==null&&this.frontStation!==foreground){this.svg.append(this.stations[foreground]);this.frontStation=foreground;}
+
   this.stations.forEach((node,i)=>{
    const pose=scenePose(i,cam,width,height);
    if(!pose.visible){node.style.display='none';node.setAttribute('opacity',0);return;}
@@ -76,6 +81,5 @@ export class VectorScene{
    const c=stageLayouts[i];node.setAttribute('opacity',pose.opacity);node.setAttribute('pointer-events',part.type==='arrival'&&part.project===i?'auto':'none');
    this.layouts[i].setAttribute('transform',`translate(${pose.x} ${pose.y}) rotate(${pose.a}) scale(${pose.s}) translate(${-c.nativeW/2} ${-c.nativeH/2})`);
   });
-  this.positionLayers();
  }
 }

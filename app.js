@@ -1,13 +1,11 @@
 import {projects,contact} from './projects.js';
-import {projectPalettes,projectVisual} from './project-art.js';
-import {VectorScene} from './vector-scene.js';
+import {projectVisual} from './project-art.js';
+import {VectorScene,captionOpacity} from './vector-scene.js';
 import {SceneDirection} from './scene-direction.js';
-import {SceneEffects} from './scene-effects.js';
 import {EntranceScene,entranceState} from './entrance-scene.js';
-import {END,story,storyAt,camera,normalizeWheel,clamp,arrivalProgress,arrivalOpacity} from './geometry.js';
+import {END,story,storyAt,camera,normalizeWheel,clamp,arrivalProgress} from './geometry.js';
 const $=s=>document.querySelector(s),explorer=$('#explorer'),dialog=$('#panel'),arrival=$('#arrival-info');
 const vectorScene=new VectorScene($('#scene'));
-const effects=new SceneEffects($('#ambient-field'));
 const entrance=new EntranceScene($('#entrance-field'));
 const direction=new SceneDirection(vectorScene,arrival,$('#scene-controls'));
 const fallback=matchMedia('(max-width:780px), (prefers-reduced-motion:reduce), (hover:none) and (pointer:coarse)');
@@ -21,16 +19,16 @@ function mountArrival(index){arrival.innerHTML=summary(index);arrivalIndex=index
 const jumps=projects.map((p,i)=>`<button data-jump="${i}" aria-label="${p.name} 도착 구간으로 이동"><span>${digits(i)}</span><i></i></button>`).join('');
 $('.project-progress').innerHTML=jumps;
 $('.mobile-project-nav').innerHTML=projects.map((p,i)=>`<button data-jump="${i}">${digits(i)} <span>${p.name}</span></button>`).join('');
-$('#list-items').innerHTML=projects.map((p,i)=>`<article class="list-card" style="--card-bg:${projectPalettes[i][0]};--card-ink:${projectPalettes[i][1]}" id="project-${p.id}" tabindex="-1"><div class="art-list">${projectVisual(i)}</div><div class="list-copy">${summary(i)}</div></article>`).join('');
-function syncMotion(){const halted=paused||document.hidden||document.body.classList.contains('motion-off')||fallback.matches;vectorScene.setPaused(halted);effects.setState({paused:halted,enabled:!fallback.matches});direction.update(current,storyAt(current),halted,fallback.matches);}
+$('#list-items').innerHTML=projects.map((p,i)=>`<article class="list-card" style="--card-bg:#071216;--card-ink:#f0ecdf" id="project-${p.id}" tabindex="-1"><div class="art-list">${projectVisual(i)}</div><div class="list-copy">${summary(i)}</div></article>`).join('');
+function syncMotion(){const halted=paused||document.hidden||document.body.classList.contains('motion-off')||fallback.matches;vectorScene.setPaused(halted);direction.update(current,storyAt(current),halted,fallback.matches);}
 function render(){
  const cam=camera(current,innerWidth,innerHeight),part=storyAt(current),inArrival=part.type==='arrival',fade=entranceState(cam).textOpacity;
- vectorScene.render(cam,innerWidth,innerHeight,current,paused||document.hidden||document.body.classList.contains('motion-off')||fallback.matches);effects.setState({paused:paused||document.hidden||document.body.classList.contains('motion-off')||fallback.matches,enabled:!fallback.matches});effects.update(cam,innerWidth,innerHeight);
+ vectorScene.render(cam,innerWidth,innerHeight,current,paused||document.hidden||document.body.classList.contains('motion-off')||fallback.matches);
  if(fallback.matches)$('#entrance-field').hidden=true;else entrance.render(cam,innerWidth,innerHeight);
  $('.intro').hidden=fade===0;$('.intro').style.opacity=fade;$('.intro').inert=fade<.05;$('.intro').setAttribute('aria-hidden',String(fade<.05));
 
  if(inArrival&&arrivalIndex!==part.project)mountArrival(part.project);
- arrival.hidden=!inArrival;arrival.inert=!inArrival||arrivalOpacity(current)<.05;arrival.style.opacity=arrivalOpacity(current);
+ arrival.hidden=!inArrival;arrival.inert=!inArrival||captionOpacity(cam)<.05;arrival.style.opacity=captionOpacity(cam);$('#scene-controls').style.setProperty('--caption-opacity',captionOpacity(cam));
  direction.update(current,part,paused||document.hidden,fallback.matches);
  const transit=$('#transit-info');transit.hidden=part.type!=='journey'||(part.project===0&&part.t<.6);if(part.type==='journey'){transit.querySelector('span').textContent='NEXT EXPERIENCE / '+digits(part.project);transit.querySelector('p').textContent=projects[part.project].name;}
  const ending=part.type==='outro';$('#journey-end').hidden=!ending;$('#journey-end').style.opacity=ending?clamp(part.t*2.7):0;$('#journey-end').inert=!ending||part.t<.08;
@@ -60,6 +58,6 @@ $('#toggle-motion').onclick=()=>{const off=document.body.classList.toggle('motio
 function resize(){syncMotion();render();wake();}window.addEventListener('resize',resize);fallback.addEventListener('change',resize);document.addEventListener('visibilitychange',syncMotion);
 const linkedProject=projects.findIndex(p=>p.id===new URLSearchParams(location.search).get('project'));if(linkedProject>=0&&!fallback.matches)current=target=arrivalProgress(linkedProject);
 resize();if(linkedProject>=0&&fallback.matches)requestAnimationFrame(()=>jump(linkedProject));
-window.__zoom={get progress(){return current;},get target(){return target;},get paused(){return paused;},get chapter(){return storyAt(current);},get visual(){return effects.state;},get arrivals(){return direction.clocks.map(c=>({value:c.value,seen:c.seen}));},end:END};
+window.__zoom={get progress(){return current;},get target(){return target;},get paused(){return paused;},get chapter(){return storyAt(current);},get visual(){return{...entranceState(camera(current,innerWidth,innerHeight)),renderer:fallback.matches?'static':entrance.state.renderer,enabled:!fallback.matches,paused,pointer:{x:0,y:0},energy:0};},get field(){return this.visual;},get arrivals(){return direction.clocks.map(c=>({value:c.value,seen:c.seen}));},end:END};
 
 dialog.addEventListener('keydown',e=>{if(e.key!=='Tab')return;const nodes=[...dialog.querySelectorAll('button:not([disabled]),a[href],input,textarea,select,[tabindex="0"]')].filter(n=>n.getClientRects().length),first=nodes[0],last=nodes.at(-1);if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}});
