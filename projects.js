@@ -1,20 +1,36 @@
+// These are original UI composition studies, not claims of client work.
 export const projects = [
-  { name:'FORM / OTHER', short:'form & other.', role:'브랜드 전략 · 아이덴티티 · 아트 디렉션', type:'a', year:'2026', category:'CULTURE & COMMUNITY',
-    title:'Different forms.\nOne shared voice.', heading:'다름을 모아,\n하나의 태도로.',
-    description:'독립적인 크리에이터가 각자의 개성을 지키면서도 하나의 커뮤니티로 연결될 수 있을까? 서로 다른 형태가 만나 새로운 균형을 이루는 브랜드를 구상했습니다.',
-    approach:'세리프 타이포그래피와 접힌 종이의 구조를 조합했습니다. 아이보리 용지와 짙은 잉크, 섬세한 인쇄 디테일이 독립적인 태도와 연결의 감각을 함께 전합니다.',
-    scope:['Brand strategy','Visual identity','Art direction','Digital applications'], caption:'하나의 로고보다, 함께 확장되는 시스템.' },
-  { name:'mori', short:'mori', role:'브랜드 아이덴티티 · 패키지 · 디지털 경험', type:'b', year:'2025', category:'WELLNESS & DAILY RITUAL',
-    title:'A little closer\nto your nature.', heading:'일상에 스며드는\n자연의 리듬.',
-    description:'바쁜 일상 속 작은 루틴을 자연과 연결하는 웰니스 브랜드 콘셉트입니다. 좋은 습관을 강요하기보다, 손이 가고 곁에 두고 싶은 경험을 디자인했습니다.',
-    approach:'잎의 곡선에서 출발한 그래픽과 차분한 세이지 컬러를 사용했습니다. 패키지의 촉감부터 모바일 화면의 정보 밀도까지 같은 호흡으로 이어집니다.',
-    scope:['Brand identity','Packaging system','E-commerce direction','Digital experience'], caption:'보이는 것에서, 매일 손에 닿는 경험으로.' },
-  { name:'OFFBEAT', short:'OFFBEAT', role:'크리에이티브 디렉션 · 웹 디자인 · 인터랙션', type:'c', year:'2025', category:'MUSIC & INDEPENDENT CULTURE',
-    title:'Find your\nown frequency.', heading:'익숙한 박자\n밖의 새로운 감각.',
-    description:'음악을 고르는 순간부터 새로운 아티스트를 발견하는 순간까지. 장르의 경계를 넘어 독립 음악의 에너지를 전달하는 디지털 플랫폼을 제안합니다.',
-    approach:'흑백의 절제된 대비와 넓은 여백, 유연한 세리프 타이포그래피를 조합했습니다. 얇은 선으로 겹친 파형이 음악의 밀도와 리듬을 시각화합니다.',
-    scope:['Creative direction','Web design','Motion language','Interaction design'], caption:'정해진 장르 없이. 당신만의 주파수로.' },
- {name:'LUMA',short:'luma',role:'브랜드 아이덴티티 · 제품 아트 디렉션 · 웹 디자인',type:'d',year:'2026',category:'LIGHTING & OBJECTS',title:'Light, in a\nnew language.',heading:'빛으로 완성하는\n공간의 표정.',description:'조명을 하나의 오브젝트로 바라보는 리빙 브랜드 콘셉트입니다. 빛이 켜지기 전의 형태와 켜진 후의 분위기를 함께 디자인했습니다.',approach:'라일락과 따뜻한 코랄, 부드럽게 접힌 곡선을 사용했습니다. 제품의 실루엣을 아이덴티티로 확장하고 디지털 쇼룸에서 조명의 질감을 전달합니다.',scope:['Brand identity','Product art direction','Digital showroom','Web design'],caption:'하나의 오브젝트가 공간 전체를 바꾸는 순간.'},
- {name:'STILL ROOM',short:'still room',role:'공간 브랜딩 · 인쇄물 · 예약 경험 디자인',type:'e',year:'2025',category:'STAYS & SLOW LIVING',title:'A place to\nfeel yourself.',heading:'머무는 시간이\n기억이 되는 공간.',description:'낯선 도시에서도 나만의 속도를 되찾을 수 있는 작은 스테이를 위한 브랜드 콘셉트입니다. 예약부터 체크아웃까지 차분한 여운을 이어 갑니다.',approach:'버터 옐로와 짙은 브릭, 정제된 세리프를 조합했습니다. 객실의 키 태그, 안내 카드와 예약 화면이 하나의 환대 방식으로 이어집니다.',scope:['Place branding','Printed matter','Guest experience','Booking design'],caption:'여백과 온도로 전하는 조용한 환대.'},
- {name:'INDEX / 06',short:'index',role:'편집 디자인 · 타이포그래피 · 디지털 아카이브',type:'f',year:'2026',category:'EDITORIAL & CULTURE',title:'New ideas.\nNo fixed order.',heading:'새로운 시선을\n기록하는 방식.',description:'독립적인 창작자의 생각과 작업 과정을 기록하는 문화 저널 콘셉트입니다. 결과물뿐 아니라 그 뒤에 남은 질문과 실험을 함께 다룹니다.',approach:'강한 블루와 오프화이트, 과감한 숫자와 정교한 그리드를 대비시켰습니다. 인쇄 매거진의 리듬을 디지털 아카이브에서도 이어 갑니다.',scope:['Editorial direction','Typography system','Print design','Digital archive'],caption:'정답보다 오래 남는 질문을 모읍니다.'}
+ {
+  id:'connect',name:'CONNECT',category:'통신 웹 · 앱',eyebrow:'CONNECTED EVERYDAY',year:'2026',routeIndex:0,
+  title:'연결의 시작을,\n더 간단하게.',
+  challenge:'복잡한 요금제와 서비스 정보를 비교하고, 가입부터 이용 관리까지 자연스럽게 이어지는 경험을 설계합니다.',
+  overview:'통신 서비스의 탐색·비교·가입·이용 관리를 하나의 흐름으로 구성한 웹·앱 디자인 예시입니다. 처음 방문한 사람과 기존 이용자가 각자의 목적에 빠르게 도달하는 구조를 제안합니다.',
+  scope:['사용자 흐름 기획','웹·앱 UI 디자인','컴포넌트 시스템','인터랙션 가이드'],
+  decisions:[['선택의 기준부터 정리','데이터 사용량과 생활 패턴을 먼저 제시하고, 그 기준으로 요금제를 비교하도록 구성했습니다.'],['새로운 가입과 일상 관리를 연결','탐색 화면과 마이페이지의 시각 언어를 통일해 가입 이후에도 익숙한 경험을 이어갑니다.'],['기기마다 필요한 밀도 조절','웹에서는 비교와 탐색을, 앱에서는 사용량 확인과 빠른 관리를 중심에 두었습니다.']],
+  result:'요금제 탐색 웹, 사용량 중심 앱 대시보드와 공통 UI 컴포넌트를 제안합니다. 실제 운영 자료와 사용자 검증 결과는 포함하지 않은 구성 예시입니다.',
+  preview:'나에게 맞는 연결을 찾는 경험',role:'UX 구조 · 웹·앱 UI · 디자인 시스템',sample:true
+ },
+ {
+  id:'balance',name:'BALANCE',category:'금융 앱',eyebrow:'FINANCE, AT YOUR PACE',year:'2026',routeIndex:2,
+  title:'나의 금융을,\n한눈에 이해하도록.',
+  challenge:'흩어진 자산과 지출 정보를 정리해 지금의 상태를 이해하고, 다음 행동을 쉽게 선택하는 금융 경험을 설계합니다.',
+  overview:'자산 조회, 지출 확인, 저축 목표를 하나의 일상 루틴으로 연결한 금융 앱 디자인 예시입니다. 많은 정보를 보여주는 대신, 지금 필요한 판단부터 읽히도록 구성했습니다.',
+  scope:['정보 구조 설계','앱 UI 디자인','데이터 시각화','접근성·컴포넌트 가이드'],
+  decisions:[['상태와 행동의 우선순위 구분','자산 요약 다음에 이체·내역 확인을 배치해 조회에서 행동으로 이어지는 순서를 만들었습니다.'],['숫자를 읽는 부담 줄이기','금액의 위계, 짧은 설명, 단순한 차트를 함께 사용해 금융 정보의 밀도를 조절했습니다.'],['색상 외의 단서도 제공','수치와 레이블, 선의 형태를 함께 사용해 색상 하나에만 의미를 의존하지 않도록 설계했습니다.']],
+  result:'자산 홈, 지출 리포트와 목표 저축 컴포넌트를 구성했습니다. 화면 속 금액·수치·이름은 시연용이며 실제 고객 정보나 성과가 아닙니다.',
+  preview:'숫자에서 다음 행동으로 이어지는 경험',role:'정보 설계 · 앱 UI · 데이터 시각화',sample:true
+ },
+ {
+  id:'frame',name:'FRAME',category:'TV 콘텐츠 UI',eyebrow:'A NEW WAY TO DISCOVER',year:'2026',routeIndex:5,
+  title:'보고 싶은 순간에,\n가까이 닿도록.',
+  challenge:'멀리서 보는 TV 화면과 리모컨 조작에 맞춰 콘텐츠를 발견하고 이어 보는 흐름을 명확하게 설계합니다.',
+  overview:'TV 환경에서의 탐색, 상세 정보, 이어보기를 연결한 콘텐츠 서비스 디자인 예시입니다. 큰 화면의 시청 거리와 방향키 기반 조작을 함께 고려했습니다.',
+  scope:['TV 탐색 구조 기획','콘텐츠 UI 디자인','포커스 상태 설계','모션·컴포넌트 가이드'],
+  decisions:[['장면이 먼저 말하는 화면','콘텐츠의 분위기를 담은 큰 비주얼과 짧은 제목으로 탐색의 시작점을 만들었습니다.'],['리모컨의 이동을 설계','포커스의 위치와 다음 이동 방향이 읽히도록 카드의 강조, 순서와 간격을 함께 정의했습니다.'],['발견과 이어보기를 분리','새 콘텐츠를 찾는 영역과 보던 콘텐츠로 돌아가는 영역을 구분해 각 행동의 목적을 명확하게 했습니다.']],
+  result:'TV 홈, 콘텐츠 탐색과 이어보기 UI를 구성했습니다. 작품명과 그래픽은 독자적으로 만든 시연용 콘텐츠이며 실제 서비스 작업 실적이 아닙니다.',
+  preview:'발견에서 몰입으로 이어지는 경험',role:'TV UX · 콘텐츠 UI · 포커스·모션',sample:true
+ }
 ];
+
+// Supply a real, approved address or inquiry URL before enabling direct contact.
+export const contact = { email:null, url:null };

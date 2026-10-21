@@ -1,121 +1,52 @@
-import {projects} from './projects.js';
-
-// The same artwork is used on the journey, in case studies, and on mobile.
-// Type and illustrations remain vector geometry; product photography is framed
-// at its native resolution rather than being enlarged across the entire world.
-export const projectPalettes=[
- ['#ebe6d8','#263c34','#a8b69a'],['#e9e8d9','#344831','#a3b28b'],
- ['#293dcc','#edf0dc','#d5f269'],['#e6dfea','#783f45','#ef8e6d'],
- ['#eee0ba','#743d31','#c29a65'],['#234dc0','#f0eddf','#bfd2e4']
-];
-const serif='Cormorant Garamond,Georgia,serif';
+// Original SVG service screens. Interface data and project names are examples.
+export const projectPalettes=[['#e8f1e9','#254e42','#b9e5ad'],['#edeaf8','#504191','#bfb1f0'],['#172a32','#e6ede1','#d4e6a2']];
 const sans='Manrope,Arial,sans-serif';
-const txt=(x,y,text,size,extra='')=>`<text x="${x}" y="${y}" font-size="${size}" ${extra}>${text}</text>`;
-const lines=(x,y,width,count,color,step=5)=>Array.from({length:count},(_,i)=>`<path d="M${x} ${y+i*step}h${width*(i===count-1?.63:1)}" stroke="${color}" stroke-width=".65"/>`).join('');
-const barcode=(x,y,color)=>`<g stroke="${color}">${Array.from({length:27},(_,i)=>`<path d="M${x+i*2.1} ${y}v${i%6===0?25:19}" stroke-width="${i%4===0?2:1}"/>`).join('')}</g>`;
-function definitions(id){return `<defs>
- <linearGradient id="${id}-foil" x1="0" y1="0" x2="1" y2=".9"><stop stop-color="#faf8e8"/><stop offset=".22" stop-color="#b1beb0"/><stop offset=".43" stop-color="#f7f7e7"/><stop offset=".51" stop-color="#819789"/><stop offset=".74" stop-color="#cfd9c5"/><stop offset="1" stop-color="#6e8875"/></linearGradient>
- <linearGradient id="${id}-edge"><stop stop-color="#304f41"/><stop offset=".5" stop-color="#b8c7b1"/><stop offset="1" stop-color="#e8edde"/></linearGradient>
- <radialGradient id="${id}-shadow"><stop stop-color="#2b342c" stop-opacity=".25"/><stop offset="1" stop-color="#2b342c" stop-opacity="0"/></radialGradient>
- <linearGradient id="${id}-vinyl" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#141926"/><stop offset=".28" stop-color="#242c43"/><stop offset=".42" stop-color="#4b5370"/><stop offset=".47" stop-color="#22293c"/><stop offset=".77" stop-color="#111724"/><stop offset=".87" stop-color="#3a4157"/><stop offset="1" stop-color="#161c29"/></linearGradient>
- <linearGradient id="${id}-paper" x1="0" y1="0" x2="1" y2=".3"><stop stop-color="#ded9c9"/><stop offset=".07" stop-color="#f8f4e7"/><stop offset=".95" stop-color="#f1eddd"/><stop offset="1" stop-color="#d8d3c1"/></linearGradient>
- <linearGradient id="${id}-leather" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#d8b37b"/><stop offset=".5" stop-color="#bd8f58"/><stop offset="1" stop-color="#a47745"/></linearGradient>
- <linearGradient id="${id}-brass"><stop stop-color="#795829"/><stop offset=".3" stop-color="#f3d69b"/><stop offset=".55" stop-color="#ad8145"/><stop offset=".78" stop-color="#f5da9b"/><stop offset="1" stop-color="#8c632c"/></linearGradient>
- <pattern id="${id}-stock" width="4" height="4" patternUnits="userSpaceOnUse"><path d="M0 .5h1.4M2 2.8h.8" stroke="#574c37" stroke-width=".4" opacity=".16"/></pattern>
- <pattern id="${id}-cloth" width="3" height="3" patternUnits="userSpaceOnUse"><path d="M0 0v3M0 0h3" stroke="#eac59f" stroke-width=".45" opacity=".1"/></pattern>
- </defs>`;}
-function foil(id){return `<ellipse cx="531" cy="467" rx="185" ry="23" fill="url(#${id}-shadow)"/>
- <g transform="translate(0 -5)"><path d="M452 70 696 149 568 286 661 408 451 465 326 344 471 224 345 130Z" fill="url(#${id}-foil)"/>
- <path d="m452 70 19 154-126-94Z" fill="#d9dfca"/><path d="m452 70 244 79-225 75Z" fill="url(#${id}-foil)"/>
- <path d="m471 224 225-75-128 137Z" fill="#7c9683" opacity=".62"/><path d="m471 224 97 62-117 179Z" fill="url(#${id}-edge)"/>
- <path d="m471 224-145 120 125 121Z" fill="url(#${id}-foil)"/><path d="m568 286 93 122-210 57Z" fill="url(#${id}-foil)"/>
- <path d="m345 130 126 94 97 62-117 179m20-241 225-75M326 344l125 121 210-57" fill="none" stroke="#f8f7e9" stroke-width="1.1"/>
- <path d="m452 70 19 154-145 120M568 286l93 122" fill="none" stroke="#59715e" stroke-width=".6"/>
- <path d="m452 70 244 79-128 137 93 122-210 57-125-121 145-120-126-94Z" fill="none" stroke="#405c48" stroke-width=".5" opacity=".3"/></g>
- <g fill="none" stroke="#7c8b75" stroke-width=".5"><path d="M355 61h-20v20M697 446h20v-20"/><path d="M737 88v300" stroke-dasharray="1 5"/></g>
- ${txt(348,52,'STUDY OF A SHARED FORM',5,'fill="#63735f" letter-spacing="1.5"')}${txt(718,414,'F.01',6,'fill="#63735f" transform="rotate(-90 718 414)"')}`;}
-function product(index){const right=index===3;return `<svg x="287" y="0" width="493" height="520" viewBox="${right?768:0} 0 768 1024" preserveAspectRatio="xMidYMid slice" overflow="hidden"><image href="/assets/product-studies.png" width="1536" height="1024"/></svg><path d="M287 0V520" stroke="${right?'#bda9be':'#a8b08d'}" stroke-width=".6"/>
- ${txt(31,252,right?'Objects for':'Considered by',15,`fill="${right?'#783f45':'#344831'}" font-family="${serif}" font-style="italic"`)}
- ${txt(31,272,right?'the everyday.':'nature.',15,`fill="${right?'#783f45':'#344831'}" font-family="${serif}" font-style="italic"`)}
- <path d="M32 307h34" stroke="${right?'#783f45':'#344831'}" stroke-width=".7"/>
- ${txt(32,335,right?'MATERIAL / LIGHT / FEELING':'FORMULA / RITUAL / BALANCE',5,`fill="${right?'#783f45':'#344831'}" letter-spacing="1"`)}
- ${right?'<path d="M40 386v-22m-10 11h20m-17-7 14 14m0-14-14 14" stroke="#a76972" stroke-width=".6"/>':'<path d="M34 394c34-26 27-52 52-66 8 33-12 54-52 66Zm0 0 50-63" fill="none" stroke="#80926f" stroke-width=".7"/>'}`;}
-function vinyl(id){return `<ellipse cx="557" cy="457" rx="185" ry="22" fill="url(#${id}-shadow)"/>
- <g transform="translate(555 296)"><circle r="178" fill="#141a2b"/><circle r="176" fill="url(#${id}-vinyl)"/>
- ${Array.from({length:49},(_,i)=>`<circle r="${64+i*2.15}" fill="none" stroke="${i%3===0?'#101626':'#707a8e'}" stroke-width="${i%3===0?1:.45}" opacity="${i%3===0?.65:.47}"/>`).join('')}
- <path d="M-126-122A175 175 0 0 1 58-165L20-59A62 62 0 0 0-45-42Z" fill="#f6f8ff" opacity=".055"/>
- <circle r="58" fill="#d5f269"/><circle r="52" fill="none" stroke="#425440" stroke-width=".6"/>
- ${txt(-38,-15,'OFFBEAT',10,'fill="#253926" font-family="Manrope,Arial,sans-serif" font-weight="700" letter-spacing="-.5"')}
- ${txt(-31,6,'SIDE A / 33⅓',6,'fill="#425440" letter-spacing=".4"')}<path d="M-32 17h64" stroke="#617440" stroke-width=".5"/>
- ${txt(-22,32,'VOL. 001',5,'fill="#425440" letter-spacing="1"')}<circle r="4" fill="#1a2031"/><circle r="1.2" fill="#adb8c1"/></g>
- <path d="M24 375c98-88 177 82 283-21s130 28 220-46" fill="none" stroke="#bcc7ff" stroke-width=".8" opacity=".7"/>
- ${barcode(32,402,'#adbfff')}${txt(32,443,'SOUND WITHOUT A STRAIGHT LINE.',5,'fill="#c7d4ff" letter-spacing="1"')}`;}
-function hotel(id){return `<ellipse cx="499" cy="453" rx="205" ry="27" fill="url(#${id}-shadow)"/>
- <g transform="translate(440 64) rotate(10 110 180)">
- <path d="M5 9H232V368H5Z" fill="#624432" opacity=".2"/><path d="M-5 1H224V358H-5Z" fill="#c5ba99"/><path d="M-4 6H227V362H-4Z" fill="url(#${id}-paper)"/>
- ${[0,1,2,3].map(i=>`<path d="M0 ${351+i*2.1}H226" stroke="#bdb293" stroke-width=".5"/>`).join('')}
- <path d="M0 0H228V353H0Z" fill="#713e33"/><path d="M0 0H228V353H0Z" fill="url(#${id}-cloth)"/><path d="M12 0V353" stroke="#4c2f25" stroke-width="2"/><path d="M16 0V353" stroke="#b07857" stroke-width=".7"/>
- <path d="M33 25H205V329H33Z" fill="none" stroke="#d0ad79" stroke-width=".55"/>
- ${txt(48,112,'still',71,`font-family="${serif}" font-style="italic" fill="#ead4a7"`)}${txt(48,170,'room',67,`font-family="${serif}" font-style="italic" fill="#ead4a7"`)}
- <path d="M99 217q20-37 40 0m-35 0v23h30v-23m-20 23v-14h10v14" fill="none" stroke="#d0ad79" stroke-width=".8"/>
- ${txt(59,287,'THE ART OF TAKING YOUR TIME',4.5,'fill="#ddbc87" letter-spacing=".6"')}${txt(84,309,'GUEST JOURNAL',5,'fill="#ddbc87" letter-spacing="1.5"')}</g>
- <g transform="translate(276 270) rotate(-14 72 90)"><path d="M3 11Q3-7 20-7H126Q143-7 143 11V169Q143 186 126 186H20Q3 186 3 169Z" fill="#765030" opacity=".2"/>
- <rect width="140" height="180" rx="17" fill="url(#${id}-leather)" stroke="#aa7945" stroke-width="1.1"/>
- <rect x="7" y="7" width="126" height="166" rx="12" fill="none" stroke="#ecd09d" stroke-width=".7" stroke-dasharray="1.7 2.5"/>
- <circle cx="70" cy="21" r="8" fill="#977039" stroke="#e9c88d" stroke-width="1.7"/><circle cx="70" cy="21" r="4.5" fill="#eee0ba"/>
- <ellipse cx="72" cy="-13" rx="17" ry="30" fill="none" stroke="url(#${id}-brass)" stroke-width="5"/>
- ${txt(24,118,'204',53,`font-family="${serif}" fill="#f0cea0"`)}${txt(24,117,'204',53,`font-family="${serif}" fill="#75512c"`)}${txt(32,151,'STILL ROOM',6,'fill="#805e34" letter-spacing="1.8"')}</g>`;}
-function journal(id){return `<ellipse cx="512" cy="456" rx="227" ry="27" fill="url(#${id}-shadow)"/>
- <g transform="translate(356 58) rotate(9 160 195)">
- <path d="M4 14H348V386H4Z" fill="#14275c" opacity=".27"/><path d="M-4 7H338V377H-4Z" fill="#d6d2c4"/><path d="M-5 3H340V373H-5Z" fill="url(#${id}-paper)"/>
- ${Array.from({length:5},(_,i)=>`<path d="M0 ${364+i*1.7}H340" stroke="#b0b7b9" stroke-width=".55"/>`).join('')}
- <path d="M0 0H340V362H0Z" fill="url(#${id}-paper)"/><path d="M11 0V362" stroke="#d0ccbc" stroke-width="1"/>
- <path d="M28 46H317M28 303H317" stroke="#294db2" stroke-width=".7"/>
- ${txt(27,34,'INDEX',21,`fill="#284eb9" font-family="${sans}" font-weight="650" letter-spacing="-1"`)}${txt(222,32,'ISSUE N° 006',6,'fill="#284eb9" letter-spacing="1"')}
- ${txt(20,268,'06',256,`fill="#2850bc" font-family="${serif}" letter-spacing="-19"`)}
- <g transform="translate(250 172)" stroke="#7390c3" fill="none" stroke-width=".6">${Array.from({length:16},(_,i)=>`<ellipse rx="${10+i*3}" ry="${45+i*1.7}" transform="rotate(${i*11.25})"/>`).join('')}</g>
- ${lines(28,322,78,4,'#6a7a96',4)}${lines(123,322,78,4,'#6a7a96',4)}${txt(232,341,'NEW PERSPECTIVES',5,'fill="#284eb9" letter-spacing=".6"')}</g>
- <g transform="translate(183 331) rotate(-9)"><path d="M5 7H245V126H5Z" fill="#152652" opacity=".14"/><path d="M0 0H240V120H0Z" fill="#bbd0df"/><path d="M15 15H225V105H15Z" fill="none" stroke="#5275a5" stroke-width=".5"/>
- ${txt(25,76,'Aa—Zz',49,`fill="#2c52ad" font-family="${serif}" font-style="italic" letter-spacing="-2"`)}${txt(26,96,'A CONTINUOUS EXPLORATION',4.5,'fill="#466a9a" letter-spacing="1"')}</g>`;}
-export function artBody(index,id){const p=projects[index],[bg,fg]=projectPalettes[index],photo=index===1||index===3;
- let typography='';
- if(index===0)typography=txt(27,147,'form',112,`fill="${fg}" letter-spacing="-6"`)+txt(31,218,'&amp; other.',65,`fill="${fg}" font-style="italic" letter-spacing="-3"`)+txt(32,290,'Independent minds.',14,`fill="${fg}" font-style="italic"`)+txt(32,309,'Shared possibilities.',14,`fill="${fg}" font-style="italic"`);
- if(index===1)typography=txt(28,142,'mori.',100,`fill="${fg}" letter-spacing="-4"`);
- if(index===2)typography=txt(27,148,'OFF/',112,`fill="${fg}" font-family="${sans}" font-weight="750" letter-spacing="-9"`)+txt(27,250,'BEAT',112,`fill="${fg}" font-family="${sans}" font-weight="750" letter-spacing="-9"`);
- if(index===3)typography=txt(27,148,'luma',114,`fill="${fg}" letter-spacing="-5"`)+txt(32,184,'a softer kind of bright.',14,`fill="${fg}" font-style="italic"`);
- if(index===4)typography=txt(29,145,'Stay',108,`fill="${fg}" font-style="italic" letter-spacing="-4"`)+txt(29,232,'a little.',94,`fill="${fg}" font-style="italic" letter-spacing="-4"`)+txt(33,292,'Somewhere between',13,`fill="${fg}" font-style="italic"`)+txt(33,309,'a place and a feeling.',13,`fill="${fg}" font-style="italic"`);
- if(index===5)typography=txt(27,142,'Index',105,`fill="${fg}" font-style="italic" letter-spacing="-4"`)+txt(32,182,'IDEAS IN GOOD COMPANY.',6,`fill="${fg}" font-family="${sans}" letter-spacing="1.5"`)+`<path d="M32 236h156M32 247h156" stroke="#a7bfec" stroke-width=".4"/>`+txt(32,280,'A journal of',18,`fill="${fg}" font-style="italic"`)+txt(32,301,'new perspectives.',18,`fill="${fg}" font-style="italic"`);
- const art=index===0?foil(id):photo?product(index):index===2?vinyl(id):index===4?hotel(id):journal(id);
- return `${definitions(id)}<path d="M0 0H780V520H0Z" fill="${bg}"/>${!photo?`<path d="M0 0H780V520H0Z" fill="url(#${id}-stock)"/>`:''}${art}<g font-family="${serif}">${typography}</g><g font-family="${sans}" fill="${fg}">${txt(32,34,p.category,6.5,'letter-spacing="1.5"')}${txt(32,455,photo?'BRAND STUDY / 0'+(index+1):p.title.split('\n')[0],photo?5.5:9,`font-family="${photo?sans:serif}" ${photo?'letter-spacing="1"':'font-style="italic"'}`)}<path d="M32 473H${photo?254:747}" stroke="${fg}" stroke-width=".45" opacity=".4"/>${txt(32,493,'ROOT4 STUDIO / '+p.year,5,'letter-spacing="1.2"')}${txt(photo?229:717,493,'0'+(index+1)+' ↗',8)}</g>`;
-}
+const text=(x,y,s,size=14,extra='')=>`<text x="${x}" y="${y}" font-size="${size}" ${extra}>${s}</text>`;
+const rect=(x,y,w,h,fill,rx=0,extra='')=>`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${rx}" fill="${fill}" ${extra}/>`;
+const pill=(x,y,w,label,fill,color)=>`${rect(x,y,w,28,fill,14)}${text(x+13,y+18,label,9,`fill="${color}"`)}`;
+function defs(id){return `<defs><linearGradient id="${id}-mint" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#c3e9ae"/><stop offset="1" stop-color="#81bca6"/></linearGradient><linearGradient id="${id}-violet" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#c7b8fa"/><stop offset="1" stop-color="#8378d1"/></linearGradient><linearGradient id="${id}-sky" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#a9c9c1"/><stop offset=".5" stop-color="#516b73"/><stop offset="1" stop-color="#23353d"/></linearGradient><linearGradient id="${id}-shade" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#14282c" stop-opacity="0"/><stop offset="1" stop-color="#14282c" stop-opacity=".96"/></linearGradient></defs>`;}
+function telecom(id){return `<g transform="translate(24 72) rotate(-4 270 225)">
+ ${rect(7,12,523,390,'#031411',16,'opacity=".16"')}${rect(0,0,523,390,'#eef3e9',16,'stroke="#fbfff5" stroke-width="1"')}${rect(0,0,523,37,'#dbe5d7',16)}${rect(0,20,523,17,'#dbe5d7')}
+ <g fill="#839b8a"><circle cx="17" cy="19" r="2.5"/><circle cx="26" cy="19" r="2.5"/><circle cx="35" cy="19" r="2.5"/></g>${text(213,22,'connect / WEB',7,'fill="#79917c" letter-spacing="1"')}
+ ${text(26,77,'connect.',24,'fill="#2b5142" font-weight="700" letter-spacing="-1.2"')}${text(329,75,'요금제　혜택　고객지원',8,'fill="#647e68"')}
+ ${pill(28,108,110,'YOUR NEXT CONNECTION','#dae9d0','#5e7858')}${text(27,175,'가볍게 시작하는',28,'fill="#244f3b" letter-spacing="-1.2"')}${text(27,211,'나다운 연결.',28,'fill="#244f3b" letter-spacing="-1.2"')}
+ ${text(28,242,'일상에 맞는 요금제를 찾아보세요.',9,'fill="#789078"')}${pill(28,265,119,'요금제 알아보기　↗','#2d5a43','#edf2df')}
+ <g transform="translate(385 190)"><circle r="79" fill="none" stroke="#a9c595" stroke-width=".7"/><ellipse rx="53" ry="78" fill="none" stroke="#8eaf8b" stroke-width=".7" transform="rotate(30)"/><ellipse rx="27" ry="79" fill="none" stroke="#78a38c" stroke-width="1.2" transform="rotate(30)"/><circle r="20" fill="url(#${id}-mint)"/></g>
+ ${rect(28,325,215,41,'#dfe9d8',8)}${text(42,342,'이번 달 데이터',7,'fill="#6e876b"')}${text(42,357,'12.4 GB / 30 GB',10,'fill="#34573e" font-weight="600"')}
+ ${rect(255,325,240,41,'#e6ece0',8)}${text(268,350,'새로운 일상을 위한 혜택　↗',10,'fill="#587554"')}
+ </g>
+ <g transform="translate(445 207) rotate(7 102 175)">
+ ${rect(3,7,201,353,'#061a13',27,'opacity=".25"')}${rect(0,0,201,353,'#284c3d',26)}${rect(5,5,191,343,'#f1f5e9',22)}${rect(77,10,47,10,'#284c3d',7)}
+ ${text(18,36,'9:41',6,'fill="#61745d"')}${text(18,68,'My connect',16,'fill="#355b40" font-weight="650" letter-spacing="-.6"')}${text(18,91,'오늘도 나답게 연결되는 하루',7,'fill="#819375"')}
+ ${rect(17,113,167,129,'url(#'+id+'-mint)',15)}${text(31,137,'남은 데이터',8,'fill="#4c7152"')}${text(31,174,'17.6',34,'fill="#2b5039" font-weight="600" letter-spacing="-2"')}${text(119,172,'GB',10,'fill="#577456"')}
+ <path d="M32 201H166" stroke="#e3efd7" stroke-width="5" stroke-linecap="round"/><path d="M32 201H112" stroke="#538267" stroke-width="5" stroke-linecap="round"/>${text(31,224,'충분해요. 여유롭게 즐겨보세요.',7,'fill="#5d7e59"')}
+ ${['요금 조회','선물하기','고객지원'].map((s,i)=>`${rect(18+i*57,259,51,48,'#e2ebda',9)}${text(25+i*57,289,s,7,'fill="#64805c"')}`).join('')}
+ <path d="M18 322H183" stroke="#d4dfca" stroke-width=".7"/>${text(28,337,'홈　　　혜택　　　마이',7,'fill="#76916a"')}</g>
+ ${pill(109,498,173,'WEB + APP / UI COMPOSITION','#305641','#d5e6c7')}`;}
+function finance(id){return `<g transform="translate(196 27) rotate(5 114 249)">
+ ${rect(6,11,233,482,'#100f2a',32,'opacity=".22"')}${rect(0,0,233,482,'#302d4b',31)}${rect(5,5,223,472,'#f3f1fa',27)}${rect(91,10,52,11,'#302d4b',7)}
+ ${text(19,36,'9:41',6,'fill="#8a80a6"')}${text(20,73,'balance',24,'fill="#60518a" font-weight="600" letter-spacing="-1"')}${text(21,98,'나의 속도로 만드는 금융',8,'fill="#a296b2"')}
+ ${rect(18,120,197,131,'url(#'+id+'-violet)',16)}${text(34,144,'총 자산 · 금액 예시',8,'fill="#665790"')}${text(33,180,'12,480,000',25,'fill="#42366c" font-weight="600" letter-spacing="-1.5"')}${text(183,180,'원',9,'fill="#665790"')}
+ ${pill(32,207,73,'자산 보기　↗','#e3dcf8','#6b5c91')}${pill(112,207,87,'바로 이체하기','#695b9c','#f3effc')}
+ ${text(22,286,'이번 달의 흐름',11,'fill="#625485" font-weight="600"')}${text(22,305,'일상 지출을 한눈에',7,'fill="#a397b4"')}
+ ${[37,54,43,71,48,85,62].map((h,i)=>rect(23+i*27,407-h,14,h,i===5?'#8772bf':'#cfc4e7',6)).join('')}${text(23,426,'월　　　화　　　수　　　목　　　금',6,'fill="#a99bbb"')}
+ <path d="M21 444H212" stroke="#ddd6eb" stroke-width=".7"/>${text(31,463,'홈　　　내역　　　목표　　　전체',7,'fill="#8f80a6"')}</g>
+ <g transform="translate(31 231) rotate(-9 111 76)">${rect(5,7,225,147,'#141027',17,'opacity=".16"')}${rect(0,0,225,147,'#4b416b',17)}${text(21,34,'WEEKLY INSIGHT',8,'fill="#c1b3dc" letter-spacing="1"')}${text(21,62,'나를 위한 균형.',19,'fill="#f0e8ff" letter-spacing="-1"')}<path d="M21 118c25 0 22-41 49-28s32-37 55-20 37-22 75-34" stroke="#beadea" stroke-width="2" fill="none"/><circle cx="200" cy="36" r="3" fill="#e7dcff"/></g>
+ <g transform="translate(345 363) rotate(11)">${rect(0,0,158,123,'#e2dbf4',14)}${text(18,29,'MY GOAL / 구성 예시',7,'fill="#9988b6"')}${text(18,55,'조금씩, 꾸준히.',15,'fill="#665284"')}<circle cx="123" cy="88" r="17" fill="none" stroke="#c5b6df" stroke-width="3"/><path d="M123 71a17 17 0 1 1-16 23" fill="none" stroke="#8d76b6" stroke-width="3" stroke-linecap="round"/>${text(18,94,'목표 저축',9,'fill="#9d8ab5"')}</g>`;}
+function landscape(id,x,y,w,h){return `<svg x="${x}" y="${y}" width="${w}" height="${h}" viewBox="0 0 800 450" preserveAspectRatio="xMidYMid slice" overflow="hidden">${rect(0,0,800,450,'url(#'+id+'-sky)')}<circle cx="580" cy="111" r="93" fill="#d9d7ad" opacity=".7"/><path d="M0 343 208 104 413 307 593 189 800 344V450H0Z" fill="#597474"/><path d="M0 450 0 340 218 263 381 407 623 290 800 361V450Z" fill="#354e55"/><path d="M0 450 165 374 373 450 656 345 800 404V450Z" fill="#223c45"/>${Array.from({length:9},(_,i)=>`<path d="M0 ${383+i*9}C250 ${342+i*8} 470 ${473+i*3} 800 ${348+i*10}" fill="none" stroke="#bad3b4" stroke-width=".7" opacity=".16"/>`).join('')}</svg>`;}
+function television(id){return `<g transform="translate(26 59) rotate(-3 327 196)">
+ ${rect(8,14,655,390,'#061118',15,'opacity=".28"')}${rect(0,0,655,390,'#21343c',14,'stroke="#8da3a1" stroke-width="1.2"')}
+ ${landscape(id,6,6,643,378)}${rect(6,6,643,378,'url(#'+id+'-shade)',10)}
+ ${text(28,41,'FRAME',17,'fill="#e2e7d6" font-weight="600" letter-spacing="2"')}${text(186,39,'홈　　발견　　이어보기',8,'fill="#c5d0c1"')}${text(577,39,'검색　○',8,'fill="#dce5d4"')}
+ ${pill(28,138,86,'ORIGINAL / DEMO','#c6d7a8','#405b55')}${text(26,202,'BEYOND',45,'fill="#edf0dd" font-weight="500" letter-spacing="4"')}${text(29,228,'아직 만나지 못한 장면들',11,'fill="#cbd6c4"')}${pill(28,251,98,'이어보기　▷','#e1e9cb','#344a46')}
+ ${text(29,309,'지금 발견하는 이야기',10,'fill="#d4dfc8"')}
+ ${['AFTER HOURS','A QUIET DAY','OPEN WATER','NEW PERSPECTIVE'].map((s,i)=>`${rect(28+i*151,326,140,34,['#bac4a4','#687e7c','#506f78','#818d7e'][i],3,i===0?'stroke="#e3ebc9" stroke-width="2.2"':'')}${text(36+i*151,347,s,7,`fill="${i===0?'#4a6159':'#e0e7d8'}" letter-spacing=".5"`)}`).join('')}
+ </g>
+ <g transform="translate(526 357) rotate(8)">${rect(4,6,119,139,'#071218',13,'opacity=".3"')}${rect(0,0,119,139,'#dae4ce',13)}${text(14,23,'CONTINUE',7,'fill="#6a7c65" letter-spacing="1"')}${landscape(id,9,35,101,59)}${text(13,110,'BEYOND',10,'fill="#465e55" font-weight="650"')}<path d="M14 124h88" stroke="#b4c5a5" stroke-width="2"/><path d="M14 124h53" stroke="#5b7966" stroke-width="2"/></g>
+ <g transform="translate(120 463)">${['←','↑','→'].map((s,i)=>`${rect(i*38,0,29,27,'#b4c7b0',7)}${text(9+i*38,18,s,12,'fill="#3f5d54"')}`).join('')}${text(130,18,'FOCUS / TV INTERACTION',7,'fill="#b2c8b4" letter-spacing="1"')}</g>`;}
+function body(index,id){return index===0?telecom(id):index===1?finance(id):television(id);}
+const frames=['0 0 700 570','0 0 550 550','0 0 720 530'];
+export function projectObject(index,id){return `<svg class="project-object" width="100%" height="100%" viewBox="${frames[index]}" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">${defs(id)}<g font-family="${sans}">${body(index,id)}</g></svg>`;}
 let instance=0;
-export function projectVisual(index){return `<svg class="project-art" viewBox="0 0 780 520" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">${artBody(index,'art-'+instance++)}</svg>`;}
-
-// Small identity marks are vector drawings, shared by stationery and UI.
-export function brandMark(index){
- const bodies=[
-  '<path d="M12 13h29L27 31H12Zm0 21h15L12 53Zm18 0h21L30 58Z" fill="currentColor"/>',
-  '<path d="M17 55C49 49 55 24 49 8 25 16 10 33 17 55Zm0 0 30-43M25 43l18-3M32 32l-3-11" fill="none" stroke="currentColor" stroke-width="1.3"/>',
-  '<g fill="none" stroke="currentColor" stroke-width="1.4"><path d="M4 32c7-44 13 44 20 0s13 44 20 0 13 44 20 0"/><path d="M4 38c7-44 13 44 20 0s13 44 20 0 13 44 20 0" opacity=".4"/></g>',
-  `<g stroke="currentColor" stroke-width="1.4">${Array.from({length:12},(_,i)=>`<path d="M32 6V22" transform="rotate(${i*30} 32 32)"/>`).join('')}<circle cx="32" cy="32" r="3" fill="none"/></g>`,
-  '<g fill="none" stroke="currentColor" stroke-width="1.1"><path d="M13 51V30a19 19 0 0 1 38 0v21ZM19 51V30a13 13 0 0 1 26 0v21M26 51V39a6 6 0 0 1 12 0v12M8 56h48"/></g>',
-  `<g transform="translate(32 32)" fill="none" stroke="currentColor" stroke-width=".7">${Array.from({length:12},(_,i)=>`<ellipse rx="12" ry="26" transform="rotate(${i*15})"/>`).join('')}</g>`
- ];return `<svg class="brand-mark" width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">${bodies[index]}</svg>`;
-}
-
-// Unframed editions let the journey read as a composed scene of artifacts.
-// Case studies continue using the complete original identity artwork above.
-export function projectObject(index,id){
- const frames=['280 30 470 470','0 0 340 460','350 90 410 410','0 0 370 460','230 20 530 490','160 20 590 490'];
- let body;
- if(index===0)body=foil(id);
- else if(index===2)body=vinyl(id).split('<path d="M24 375')[0];
- else if(index===4)body=hotel(id);
- else if(index===5)body=journal(id);
- else {
-  const lamp=index===3,w=lamp?370:340;
-  const shape=lamp?'M54 0H316Q370 0 370 54V315Q370 398 274 445L232 460H54Q0 460 0 406V54Q0 0 54 0Z':'M170 0C276 0 340 75 340 172V290C340 391 266 460 170 460S0 391 0 290V172C0 75 64 0 170 0Z';
-  body=`<defs><clipPath id="${id}-crop"><path d="${shape}"/></clipPath></defs><g clip-path="url(#${id}-crop)"><svg width="${w}" height="460" viewBox="${lamp?768:0} 0 768 1024" preserveAspectRatio="xMidYMid slice"><image href="/assets/product-studies.png" width="1536" height="1024"/></svg></g><path d="${shape}" fill="none" stroke="#eceddb" stroke-opacity=".35" stroke-width="1"/>`;
- }
- return `<svg class="project-object" viewBox="${frames[index]}" overflow="visible" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">${definitions(id)}${body}</svg>`;
-}
+export function projectVisual(index){const id='screen-'+instance++,[bg]=projectPalettes[index];return `<svg class="project-art" viewBox="0 0 780 580" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">${rect(0,0,780,580,bg)}<svg x="35" y="10" width="710" height="535">${projectObject(index,id)}</svg>${text(31,553,'ROOT4 / DIGITAL EXPERIENCE — 구성 예시',6,`font-family="${sans}" fill="${index===2?'#a0bba8':'#789080'}" letter-spacing="1"`)}</svg>`;}
+export function serviceFragment(index){const [bg,fg,accent]=projectPalettes[index];return `<g font-family="${sans}">${rect(0,0,135,94,bg,11,'stroke="#ffffff30" stroke-width=".6"')}${rect(12,13,22,5,accent,2)}${text(12,39,['MY CONNECTION','MY BALANCE','NOW PLAYING'][index],7,`fill="${fg}" letter-spacing=".6"`)}<path d="M13 55h108M13 68h67" stroke="${fg}" stroke-width="2" opacity=".15"/>${index===1?'<path d="M13 76c25-33 37 20 63-19s26-9 45-25" stroke="#9d88c8" fill="none" stroke-width="1"/>':''}</g>`;}

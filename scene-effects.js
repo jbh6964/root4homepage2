@@ -9,7 +9,7 @@ export class SceneEffects {
   this.canvas=canvas;this.ctx=canvas.getContext('2d',{alpha:true});this.scene=scene;this.container=container;this.detail=detail;
   this.pointer={x:0,y:0};this.target={x:0,y:0};this.phase=1.8;this.enabled=true;this.paused=false;this.raf=0;
   this.fine=matchMedia('(hover:hover) and (pointer:fine)');
-  this.particles=Array.from({length:72},(_,i)=>({x:350+noise(i+3)*2150,y:220+noise(i+93)*1330,z:noise(i+171),phase:noise(i+75)*TAU}));
+  this.particles=Array.from({length:24},(_,i)=>({x:350+noise(i+3)*2150,y:220+noise(i+93)*1330,z:noise(i+171),phase:noise(i+75)*TAU}));
   this.frame=this.frame.bind(this);
   container.addEventListener('pointermove',event=>{
    if(!this.enabled||this.paused||!this.fine.matches||event.pointerType==='touch')return;
@@ -80,7 +80,7 @@ export class SceneEffects {
   for(const dot of this.particles){
    const x=w/2+(dot.x-cam.x)*s+Math.sin(t*.3+dot.phase)*4+p.x*dot.z*7,y=h/2+(dot.y-cam.y)*s+Math.cos(t*.25+dot.phase)*3+p.y*dot.z*5;
    if(x<0||x>w||y<0||y>h)continue;
-   ctx.fillStyle=`rgba(184,206,188,${.09+dot.z*.16})`;ctx.fillRect(x,y,dot.z>.7?1.5:.7,.7);
+   ctx.fillStyle=`rgba(184,206,188,${.035+dot.z*.06})`;ctx.fillRect(x,y,dot.z>.7?1.5:.7,.7);
   }
   ctx.globalCompositeOperation='source-over';
  }
