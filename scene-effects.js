@@ -1,88 +1,28 @@
-const TAU=Math.PI*2;
-const fract=value=>value-Math.floor(value);
-const noise=seed=>fract(Math.sin(seed*127.1+311.7)*43758.5453);
-
-// A small, dependency-free light field. Camera coordinates come from the same
-// finite journey as the SVG; pointer movement never changes the scroll camera.
-export class SceneEffects {
- constructor(canvas,scene,container,detail){
-  this.canvas=canvas;this.ctx=canvas.getContext('2d',{alpha:true});this.scene=scene;this.container=container;this.detail=detail;
-  this.pointer={x:0,y:0};this.target={x:0,y:0};this.phase=1.8;this.enabled=true;this.paused=false;this.raf=0;
-  this.fine=matchMedia('(hover:hover) and (pointer:fine)');
-  this.particles=Array.from({length:24},(_,i)=>({x:350+noise(i+3)*2150,y:220+noise(i+93)*1330,z:noise(i+171),phase:noise(i+75)*TAU}));
-  this.frame=this.frame.bind(this);
-  container.addEventListener('pointermove',event=>{
-   if(!this.enabled||this.paused||!this.fine.matches||event.pointerType==='touch')return;
-   const rect=container.getBoundingClientRect();this.target.x=Math.max(-1,Math.min(1,(event.clientX-rect.left)/rect.width*2-1));this.target.y=Math.max(-1,Math.min(1,(event.clientY-rect.top)/rect.height*2-1));
-  },{passive:true});
-  container.addEventListener('pointerleave',()=>{if(!this.paused){this.target.x=0;this.target.y=0;this.scene.focus(-1);}});
-  this.fine.addEventListener('change',()=>{this.target.x=0;this.target.y=0;});
+// A textured fluid surface. Pointer velocity displaces only the nearby material;
+// the camera and HTML click targets are never part of this simulation.
+const vertex=`attribute vec2 position;varying vec2 uv;void main(){uv=position*.5+.5;gl_Position=vec4(position,0.,1.);}`;
+const fragment=`precision highp float;varying vec2 uv;uniform sampler2D image;uniform vec2 resolution;uniform vec2 centre;uniform vec2 size;uniform vec2 pointer;uniform vec2 velocity;uniform float energy;uniform float time;uniform float alpha;uniform vec3 tint;uniform float tintMix;
+ void main(){vec2 pixel=vec2(uv.x,1.-uv.y)*resolution;vec2 p=(pixel-centre)/size+.5;vec2 mouse=(pointer-centre)/size+.5;vec2 delta=p-mouse;float radius=length(delta);float local=exp(-dot(delta,delta)*24.);vec2 wave=delta/(radius+.03)*sin(radius*42.-time*2.)*local*energy*.009;p+=wave+velocity*local*.018; if(p.x<0.||p.x>1.||p.y<0.||p.y>1.){gl_FragColor=vec4(0.);return;}vec4 col=texture2D(image,p);vec3 material=mix(col.rgb,tint*(.35+dot(col.rgb,vec3(.3,.5,.2))),tintMix);material+=local*energy*.08;gl_FragColor=vec4(material*col.a*alpha,col.a*alpha);}`;
+export class SceneEffects{
+ constructor(canvas,scene,container){
+  this.canvas=canvas;this.scene=scene;this.container=container;this.pointer={x:0,y:0};this.target={x:0,y:0};this.velocity={x:0,y:0};this.energy=0;this.phase=0;this.raf=0;this.paused=false;this.enabled=false;this.fine=matchMedia('(hover:hover) and (pointer:fine)');
+  this.gl=canvas.getContext('webgl',{alpha:true,premultipliedAlpha:true,antialias:false,preserveDrawingBuffer:false});
+  if(this.gl)this.initGL();else{this.ctx=canvas.getContext('2d');this.canvas.classList.add('canvas-fallback');}
+  this.image=new Image();this.image.onload=()=>{this.ready=true;if(this.gl){const gl=this.gl;gl.bindTexture(gl.TEXTURE_2D,this.texture);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,this.image);}this.draw();};this.image.src='/assets/studio-fluid.webp';
+  container.addEventListener('pointermove',e=>{if(!this.enabled||this.paused||!this.fine.matches||e.pointerType==='touch')return;const x=e.clientX/innerWidth*2-1,y=e.clientY/innerHeight*2-1,now=performance.now(),dt=Math.max(12,now-(this.pointerTime||now));this.velocity.x=Math.max(-1,Math.min(1,(x-this.target.x)*600/dt));this.velocity.y=Math.max(-1,Math.min(1,(y-this.target.y)*600/dt));this.energy=Math.min(1,this.energy+Math.hypot(x-this.target.x,y-this.target.y)*3);this.target={x,y};this.pointerTime=now;},{passive:true});
+  container.addEventListener('pointerleave',()=>{if(!this.paused)this.target={x:0,y:0};});this.frame=this.frame.bind(this);
  }
- update(cam,width,height){
-  this.cam=cam;this.width=width;this.height=height;
-  const dpr=Math.min(devicePixelRatio||1,1.25),w=Math.round(width*dpr),h=Math.round(height*dpr);
-  if(this.canvas.width!==w||this.canvas.height!==h||this.dpr!==dpr){this.canvas.width=w;this.canvas.height=h;this.dpr=dpr;this.dirty=true;}
-  // Static motion mode still follows intentional scrolling and viewport changes.
-  if(this.paused&&this.enabled)this.draw();
-  this.wake();
- }
- setState({paused,enabled}){
-  const wasEnabled=this.enabled;this.paused=paused;this.enabled=enabled;
-  if(!enabled){this.target.x=this.target.y=this.pointer.x=this.pointer.y=0;this.applyPointer();if(this.ctx)this.ctx.clearRect(0,0,this.canvas.width,this.canvas.height);}
-  if(paused||!enabled){cancelAnimationFrame(this.raf);this.raf=0;this.last=0;}else if(wasEnabled!==enabled||!this.raf){this.last=0;this.wake();}
- }
+ initGL(){const gl=this.gl;const shader=(type,source)=>{const sh=gl.createShader(type);gl.shaderSource(sh,source);gl.compileShader(sh);if(!gl.getShaderParameter(sh,gl.COMPILE_STATUS))throw Error(gl.getShaderInfoLog(sh));return sh;};const program=gl.createProgram();gl.attachShader(program,shader(gl.VERTEX_SHADER,vertex));gl.attachShader(program,shader(gl.FRAGMENT_SHADER,fragment));gl.linkProgram(program);gl.useProgram(program);this.program=program;const buffer=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,buffer);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,-1,1,1,-1,1,1]),gl.STATIC_DRAW);const location=gl.getAttribLocation(program,'position');gl.enableVertexAttribArray(location);gl.vertexAttribPointer(location,2,gl.FLOAT,false,0,0);this.uniforms={};for(const name of['image','resolution','centre','size','pointer','velocity','energy','time','alpha','tint','tintMix'])this.uniforms[name]=gl.getUniformLocation(program,name);this.texture=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,this.texture);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);gl.uniform1i(this.uniforms.image,0);}
+ setState({paused,enabled}){this.paused=paused;this.enabled=enabled;if(paused||!enabled){cancelAnimationFrame(this.raf);this.raf=0;this.last=0;}else this.wake();if(!enabled){this.pointer={x:0,y:0};this.target={x:0,y:0};this.scene.setPointer(0,0);}}
+ update(cam,width,height){this.cam=cam;this.width=width;this.height=height;const dpr=Math.min(devicePixelRatio||1,1.5);const w=Math.round(width*dpr),h=Math.round(height*dpr);if(this.canvas.width!==w||this.canvas.height!==h){this.canvas.width=w;this.canvas.height=h;if(this.gl)this.gl.viewport(0,0,w,h);}if(this.paused)this.draw();this.wake();}
  wake(){if(this.enabled&&!this.paused&&!this.raf)this.raf=requestAnimationFrame(this.frame);}
- frame(now){
-  this.raf=0;if(!this.enabled||this.paused)return;
-  const dt=Math.min(50,this.last?now-this.last:16);this.last=now;this.phase+=dt*.00011;
-  const ease=1-Math.exp(-dt/210),beforeX=this.pointer.x,beforeY=this.pointer.y;
-  this.pointer.x+=(this.target.x-this.pointer.x)*ease;this.pointer.y+=(this.target.y-this.pointer.y)*ease;
-  if(Math.abs(beforeX-this.pointer.x)+Math.abs(beforeY-this.pointer.y)>.00003)this.applyPointer();
-  if(!this.lastDraw||now-this.lastDraw>=40||this.dirty){this.draw();this.lastDraw=now;this.dirty=false;}
-  this.wake();
- }
- applyPointer(){
-  this.scene.setPointer(this.pointer.x,this.pointer.y);
-  this.detail.style.setProperty('--pointer-x',this.pointer.x.toFixed(4));
-  this.detail.style.setProperty('--pointer-y',this.pointer.y.toFixed(4));
- }
- draw(){
-  if(!this.ctx||!this.cam||!this.enabled)return;
-  const ctx=this.ctx,{width:w,height:h,cam,pointer:p,phase:t}=this,s=cam.s;
-  ctx.setTransform(this.dpr,0,0,this.dpr,0,0);ctx.clearRect(0,0,w,h);
-  const cx=w/2+(1360-cam.x)*s,cy=h/2+(865-cam.y)*s,r=680*s;
-  ctx.globalCompositeOperation='source-over';
-  if(cx+r>-100&&cx-r<w+100&&cy+r>-100&&cy-r<h+100){
-   const glow=ctx.createRadialGradient(cx,cy,0,cx,cy,r*1.3);glow.addColorStop(0,'rgba(118,157,141,.065)');glow.addColorStop(.55,'rgba(103,133,153,.028)');glow.addColorStop(1,'rgba(80,130,130,0)');
-   ctx.fillStyle=glow;ctx.fillRect(Math.max(0,cx-r*1.3),Math.max(0,cy-r*1.3),Math.min(w,r*2.6),Math.min(h,r*2.6));
-   const yaw=-.3+p.x*.13,pitch=.94+p.y*.09,roll=-.48+p.x*.045;
-   const cosY=Math.cos(yaw),sinY=Math.sin(yaw),cosP=Math.cos(pitch),sinP=Math.sin(pitch),cosR=Math.cos(roll),sinR=Math.sin(roll);
-   const point=(u,v)=>{
-    const tube=133+27*Math.sin(u*3+t*.8+v*.5),radius=437+45*Math.cos(u*2+t*.35);
-    const x=(radius+tube*Math.cos(v))*Math.cos(u),y=(radius+tube*Math.cos(v))*Math.sin(u),z=tube*Math.sin(v)+72*Math.sin(u*2+t*.22);
-    const xr=x*cosR-y*sinR,yr=x*sinR+y*cosR,yp=yr*cosP-z*sinP,zp=yr*sinP+z*cosP;
-    const xp=xr*cosY+zp*sinY,zz=-xr*sinY+zp*cosY,perspective=1900/(1900+zz);
-    return{x:cx+xp*perspective*s+p.x*5,y:cy+yp*perspective*s+p.y*3,z:zz};
-   };
-   const strands=w<1000?36:48,steps=96;
-   ctx.lineWidth=.55;
-   for(let i=0;i<strands;i++){
-    const v=i/strands*TAU,alpha=.12+.29*(.5+.5*Math.cos(v+.7));
-    const gradient=ctx.createLinearGradient(cx-r*.8,cy-r*.45,cx+r*.7,cy+r*.5);
-    gradient.addColorStop(0,`rgba(201,178,154,${alpha})`);gradient.addColorStop(.42,`rgba(192,211,177,${alpha*.9})`);gradient.addColorStop(.7,`rgba(160,197,210,${alpha})`);gradient.addColorStop(1,`rgba(179,162,196,${alpha*.7})`);
-    ctx.strokeStyle=gradient;ctx.beginPath();
-    for(let j=0;j<=steps;j++){const a=point(j/steps*TAU,v);if(j===0)ctx.moveTo(a.x,a.y);else ctx.lineTo(a.x,a.y);}ctx.stroke();
-   }
-   ctx.lineWidth=.4;ctx.strokeStyle='rgba(176,204,186,.11)';
-   for(let i=0;i<24;i++){ctx.beginPath();for(let j=0;j<=52;j++){const a=point(i/24*TAU,j/52*TAU);if(j===0)ctx.moveTo(a.x,a.y);else ctx.lineTo(a.x,a.y);}ctx.stroke();}
-   for(let i=0;i<32;i++){const a=point(noise(i+47)*TAU+t*.035,noise(i+97)*TAU);ctx.fillStyle=`rgba(217,228,207,${.18+noise(i+9)*.4})`;ctx.beginPath();ctx.arc(a.x,a.y,.6+noise(i+67)*.7,0,TAU);ctx.fill();}
-  }
-  for(const dot of this.particles){
-   const x=w/2+(dot.x-cam.x)*s+Math.sin(t*.3+dot.phase)*4+p.x*dot.z*7,y=h/2+(dot.y-cam.y)*s+Math.cos(t*.25+dot.phase)*3+p.y*dot.z*5;
-   if(x<0||x>w||y<0||y>h)continue;
-   ctx.fillStyle=`rgba(184,206,188,${.035+dot.z*.06})`;ctx.fillRect(x,y,dot.z>.7?1.5:.7,.7);
-  }
-  ctx.globalCompositeOperation='source-over';
- }
- get state(){return{phase:this.phase,paused:this.paused,enabled:this.enabled,pointer:{...this.pointer},target:{...this.target}};}
+ frame(now){this.raf=0;if(!this.enabled||this.paused)return;const dt=Math.min(40,this.last?now-this.last:16);this.last=now;this.phase+=dt*.001;const ease=1-Math.exp(-dt/150);this.pointer.x+=(this.target.x-this.pointer.x)*ease;this.pointer.y+=(this.target.y-this.pointer.y)*ease;this.energy*=Math.exp(-dt/350);this.velocity.x*=Math.exp(-dt/240);this.velocity.y*=Math.exp(-dt/240);this.scene.setPointer(this.pointer.x,this.pointer.y,this.energy);this.draw();this.wake();}
+ draw(){if(!this.ready||!this.cam||!this.enabled)return;const {width:w,height:h,cam}=this;
+  const presets=[{x:.69,y:.49,scale:1.24,alpha:1,tint:[.3,.4,1],mix:0},{x:1.05,y:.51,scale:1.15,alpha:.92,tint:[.3,.4,1],mix:0},{x:.90,y:.50,scale:1.15,alpha:0,tint:[.6,.4,.8],mix:.5},{x:1.2,y:.95,scale:1.15,alpha:.62,tint:[.3,.4,1],mix:0},{x:-.12,y:.51,scale:1.15,alpha:.92,tint:[.8,.84,.3],mix:.8},{x:1.05,y:1.03,scale:1.15,alpha:.92,tint:[1,.34,.17],mix:.8},{x:.8,y:.48,scale:1.2,alpha:1,tint:[.3,.4,1],mix:0}];
+  let from,to,t;
+  if(cam.type==='intro'){from=to=presets[0];t=0;}else if(cam.type==='outro'){from=presets[5];to=presets[6];t=Math.min(1,cam.t*1.7);}else if(cam.type==='journey'){from=presets[cam.project];to=presets[cam.project+1];t=cam.t;}else{from=to=presets[cam.project+1];t=1;}
+  t=t*t*(3-2*t);const mix=(a,b)=>a+(b-a)*t,scale=mix(from.scale,to.scale)*(.94+.06*cam.zoom),width=w*scale,height=width*2/3;
+  const cx=w*(mix(from.x,to.x)+Math.sin(cam.routeDistance*Math.PI*3)*.06)+this.pointer.x*14,cy=h*(mix(from.y,to.y)+Math.sin(cam.routeDistance*Math.PI*2)*.045)+this.pointer.y*9,alpha=mix(from.alpha,to.alpha),tint=from.tint.map((v,i)=>mix(v,to.tint[i])),tintMix=mix(from.mix,to.mix);
+  if(this.gl){const gl=this.gl,u=this.uniforms;gl.clearColor(0,0,0,0);gl.clear(gl.COLOR_BUFFER_BIT);gl.useProgram(this.program);gl.uniform2f(u.resolution,w,h);gl.uniform2f(u.centre,cx,cy);gl.uniform2f(u.size,width,height);gl.uniform2f(u.pointer,(this.pointer.x+1)*w/2,(this.pointer.y+1)*h/2);gl.uniform2f(u.velocity,this.velocity.x,this.velocity.y);gl.uniform1f(u.energy,this.energy);gl.uniform1f(u.time,this.phase);gl.uniform1f(u.alpha,alpha);gl.uniform3fv(u.tint,tint);gl.uniform1f(u.tintMix,tintMix);gl.drawArrays(gl.TRIANGLES,0,6);}else if(this.ctx){const ctx=this.ctx,d=this.canvas.width/w;ctx.setTransform(d,0,0,d,0,0);ctx.clearRect(0,0,w,h);ctx.globalAlpha=alpha;ctx.drawImage(this.image,cx-width/2,cy-height/2,width,height);}}
+ get state(){return{phase:this.phase,paused:this.paused,enabled:this.enabled,pointer:{...this.pointer},target:{...this.target},energy:this.energy,renderer:this.gl?'webgl':'canvas'};}
 }

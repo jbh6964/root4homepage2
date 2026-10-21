@@ -1,70 +1,86 @@
-import {routePath,routePoint,projectStations,stationDistances,clamp,smooth,projectVisibility} from './geometry.js';
+import {routePath,routePoint,projectStations,clamp,smooth,storyAt} from './geometry.js';
+import {projectObject,projectFragment,projectAppFragment,plans,products,films,filmImages} from './project-art.js';
 import {balanceData,won} from './balance-art.js';
-import {projectObject,serviceFragment} from './project-art.js';
 const NS='http://www.w3.org/2000/svg';
-const colors=['#c1ddb8','#c7b6ef','#b9d4c6'];
-export const compositions=[
- {x:180,y:-260,w:360,h:330,a:-9,depth:9},
- {x:5,y:-320,w:480,h:374.4,a:7,depth:5},
- {x:60,y:-260,w:380,h:285,a:-6,depth:11}
+export const stageLayouts=[
+ {x:.69,y:.50,w:.77,h:.78,nativeW:1000,nativeH:780},
+ {x:.65,y:.46,w:.74,h:.84,nativeW:1000,nativeH:780},
+ {x:.50,y:.54,w:.96,h:.62,nativeW:1280,nativeH:690},
+ {x:.35,y:.46,w:.77,h:.76,nativeW:1000,nativeH:780},
+ {x:.50,y:.54,w:.96,h:.62,nativeW:1280,nativeH:740}
 ];
-function station(p,i){const c=compositions[i];return `<g data-station="${i}" transform="translate(${p.x} ${p.y})" opacity="0" pointer-events="none"><g data-primary-depth="${i}" data-depth="${c.depth}"><g data-primary-layout="${i}" transform="translate(${c.x} ${c.y}) rotate(${c.a} ${c.w/2} ${c.h/2})"><ellipse class="project-aura" cx="${c.w/2}" cy="${c.h/2}" rx="${c.w*.8}" ry="${c.h*.8}" fill="url(#station-light-${i})"/><svg width="${c.w}" height="${c.h}" overflow="visible">${projectObject(i,'object-'+i)}</svg>${i===1?'':`<rect data-focus-hit="${i}" x="0" y="0" width="${c.w}" height="${c.h}" fill="transparent" pointer-events="all"/>`}</g></g><g style="display:${i===1?'none':''}" data-depth="${c.depth*1.4}" class="station-satellite" transform="translate(-80 -80)"><g transform="translate(-110 -80) rotate(${i%2?8:-8})">${i===1?'':serviceFragment(i)}</g></g><circle data-station-node r="3.5" fill="#10191a" stroke="${colors[i]}" stroke-width=".6" vector-effect="non-scaling-stroke"/><g data-station-label="${i}" fill="${colors[i]}" font-family="Manrope,Arial,sans-serif"><text font-size="7" letter-spacing="1" opacity=".6">0${i+1}</text><text x="24" font-size="10" letter-spacing=".2">${p.name}</text><text x="24" y="14" font-size="6" opacity=".6">UI 구성 예시</text></g></g>`;}
+const mix=(a,b,t)=>a+(b-a)*t;
+export function stagePose(index,cam,width,height){
+ const c=stageLayouts[index],fit=Math.min(width*c.w/c.nativeW,height*c.h/c.nativeH),station=projectStations[index];
+ const driftX=(station.x-cam.x)*cam.s*.12,driftY=(station.y-cam.y)*cam.s*.1;
+ return{x:width*c.x+driftX,y:height*c.y+driftY,s:fit*cam.zoom/(4.5+index*.35),a:0};
+}
+export function scenePose(index,cam,width,height){
+ const i=index,part=cam;
+ const active=(part.type==='arrival'||part.type==='journey')&&part.project===i,departing=(part.type==='journey'&&part.project===i+1&&part.t<.42)||(part.type==='outro'&&i===projectStations.length-1&&part.t<.42);
+ const pose=stagePose(i,cam,width,height);
+ if(!active&&!departing)return{...pose,visible:false,opacity:0};
+ let opacity=1;
+ if(part.type==='journey'&&active){const e=smooth(clamp((part.t-.06)/.94)),station=projectStations[i],rawX=clamp(width/2+(station.x-cam.x)*cam.s,width*.2,width*1.07),rawY=clamp(height/2+(station.y-cam.y)*cam.s,height*.35,height*.83);pose.x=mix(rawX,pose.x,e);pose.y=mix(rawY,pose.y,e);pose.s*=mix(.82,1,e);pose.a=(i%2?-9:8)*(1-e);opacity=clamp(part.t/.12);}
+ if(departing){const e=smooth(part.t/.42);pose.x-=width*e*.95;pose.y+=height*e*.18;pose.s*=1+e*.35;pose.a=-8*e;opacity=1-e;}
+ return{...pose,visible:true,opacity};
+}
 export class VectorScene{
  constructor(container){
-  this.svg=document.createElementNS(NS,'svg');this.svg.classList.add('zoom-world');this.svg.setAttribute('preserveAspectRatio','none');this.svg.setAttribute('aria-hidden','true');
-  const fragments=[{d:.27,i:1},{d:.51,i:2},{d:.69,i:2},{d:.80,i:2}];
-  this.svg.innerHTML=`<defs><linearGradient id="flow-spectrum"><stop stop-color="#adc5a1"/><stop offset=".5" stop-color="#acacd0"/><stop offset="1" stop-color="#aac6b4"/></linearGradient>${colors.map((c,i)=>`<radialGradient id="station-light-${i}"><stop stop-color="${c}" stop-opacity=".16"/><stop offset="1" stop-color="${c}" stop-opacity="0"/></radialGradient>`).join('')}</defs><path data-flow-route d="${routePath}" fill="none" stroke="url(#flow-spectrum)" stroke-width=".7" pathLength="1000" vector-effect="non-scaling-stroke" opacity=".28"/><path data-flow-traveled d="${routePath}" fill="none" stroke="url(#flow-spectrum)" stroke-width="1" pathLength="1000" vector-effect="non-scaling-stroke" opacity=".5"/>${fragments.map(({d,i},n)=>{const p=routePoint(d);return `<g data-bridge="${d}" data-bridge-project="${i}" transform="translate(${p.x+40} ${p.y-100}) rotate(${n%2?-7:8})" opacity="0"><g transform="scale(.7)">${serviceFragment(i)}</g></g>`;}).join('')}${projectStations.map(station).join('')}<circle data-flow-cursor r="2" fill="#d2dfc3" opacity="0"/>`;
-  container.replaceChildren(this.svg);this.route=this.svg.querySelector('[data-flow-route]');this.traveled=this.svg.querySelector('[data-flow-traveled]');this.cursor=this.svg.querySelector('[data-flow-cursor]');this.stations=[...this.svg.querySelectorAll('[data-station]')];this.labels=[...this.svg.querySelectorAll('[data-station-label]')];this.layouts=[...this.svg.querySelectorAll('[data-primary-layout]')];this.depthLayers=[...this.svg.querySelectorAll('[data-depth]')];this.bridges=[...this.svg.querySelectorAll('[data-bridge]')];
-  this.balance=this.stations[1];this.balanceValue=1;
-  this.balanceLayers=Object.fromEntries([...this.balance.querySelectorAll('[data-balance-layer]')].map(n=>[n.dataset.balanceLayer,n]));
-  this.balanceArcs=[...this.balance.querySelectorAll('[data-balance-arc]')].map(node=>({node,dashes:node.getAttribute('stroke-dasharray').split(' ').map(Number)}));
-  this.balanceLine=this.balance.querySelector('[data-balance-line]');this.balanceTotal=this.balance.querySelector('[data-balance-total]');this.balanceHighlight=this.balance.querySelector('[data-balance-highlight]');
+  this.svg=document.createElementNS(NS,'svg');this.svg.classList.add('zoom-world');this.svg.setAttribute('aria-hidden','true');
+  this.svg.innerHTML=`<g data-route><path d="${routePath}" fill="none" stroke="currentColor" stroke-width="1" vector-effect="non-scaling-stroke"/></g><g data-intro-fragments><g data-hero-shard="front"><svg width="590" height="280">${projectFragment(0,'intro-web')}</svg></g></g>${projectStations.map((station,i)=>{const c=stageLayouts[i];return `<g data-station="${i}" opacity="0" style="display:none"><g data-primary-layout="${i}"><g data-project-depth="${i}"><svg width="${c.nativeW}" height="${c.nativeH}" overflow="visible">${projectObject(i,'scene-'+i)}</svg></g></g></g>`;}).join('')}`;
+  this.backSvg=document.createElementNS(NS,'svg');this.backSvg.classList.add('zoom-world');this.backSvg.setAttribute('aria-hidden','true');this.backSvg.innerHTML=`<g data-hero-shard="back"><svg width="450" height="253">${projectFragment(2,'intro-tv')}</svg></g><g data-hero-shard="app"><svg width="260" height="400">${projectAppFragment('intro-app')}</svg></g>`;document.querySelector('#scene-back').replaceChildren(this.backSvg);
+  container.replaceChildren(this.svg);
+  this.stations=[...this.svg.querySelectorAll('[data-station]')];this.layouts=[...this.svg.querySelectorAll('[data-primary-layout]')];this.depths=[...this.svg.querySelectorAll('[data-project-depth]')];this.route=this.svg.querySelector('[data-route]');this.intro=this.svg.querySelector('[data-intro-fragments]');this.shards=[...this.backSvg.querySelectorAll('[data-hero-shard]'),...this.svg.querySelectorAll('[data-hero-shard]')];
+  this.artLayers=this.stations.map(root=>[...root.querySelectorAll('[data-art-layer],[data-balance-layer]')]);this.artLayers.flat().forEach(n=>n.dataset.baseTransform=n.getAttribute('transform')||'');this.reveals=Array(5).fill(1);this.pointer={x:0,y:0};
+  this.balance=this.stations[1];this.balanceLine=this.balance.querySelector('[data-balance-line]');this.total=this.balance.querySelector('[data-balance-total]');this.arcs=[...this.balance.querySelectorAll('[data-balance-arc]')].map(node=>({node,dashes:node.getAttribute('stroke-dasharray').split(' ').map(Number)}));
+  this.svg.querySelectorAll('[data-plan],[data-film],[data-product-focus]').forEach(n=>n.style.cursor='pointer');
+  this.svg.addEventListener('click',e=>{if(this.paused||this.part?.type!=='arrival')return;const hit=e.target.closest('[data-plan],[data-film],[data-product-focus]');if(!hit)return;const index=this.part.project,choice=Number(hit.dataset.plan??hit.dataset.film??hit.dataset.productFocus);this.svg.dispatchEvent(new CustomEvent('scene-choice',{detail:{index,choice}}));});
   this.balance.querySelectorAll('[data-balance-hit],[data-balance-month-hit]').forEach(hit=>{
-   hit.addEventListener('pointerenter',e=>{if(!this.balanceActive||this.paused||e.pointerType==='touch')return;const kind=hit.hasAttribute('data-balance-hit')?'asset':'month',index=Number(kind==='asset'?hit.dataset.balanceHit:hit.dataset.balanceMonthHit);this.svg.dispatchEvent(new CustomEvent('balance-inspect',{detail:{kind,index,anchor:{x:e.clientX,y:e.clientY}}}));});
-   hit.addEventListener('pointerleave',()=>this.svg.dispatchEvent(new CustomEvent('balance-inspect',{detail:null})));
+   hit.addEventListener('pointerenter',e=>{if(this.paused||this.part?.type!=='arrival'||this.part.project!==1||e.pointerType==='touch')return;const kind=hit.hasAttribute('data-balance-hit')?'asset':'month',index=Number(kind==='asset'?hit.dataset.balanceHit:hit.dataset.balanceMonthHit);this.svg.dispatchEvent(new CustomEvent('scene-inspect',{detail:{kind,index,x:e.clientX,y:e.clientY}}));});
+   hit.addEventListener('pointerleave',()=>this.svg.dispatchEvent(new CustomEvent('scene-inspect',{detail:null})));
   });
-  this.svg.querySelectorAll('[data-focus-hit]').forEach(hit=>{hit.addEventListener('pointerenter',e=>{if(!this.paused&&e.pointerType!=='touch')this.focus(Number(hit.dataset.focusHit));});hit.addEventListener('pointerleave',()=>this.focus(-1));});
  }
- setBalanceReveal(value){
-  this.balanceValue=value;const ease=t=>1-Math.pow(1-clamp(t),3),settle=ease((value-.08)/.62),chart=ease((value-.28)/.65);
-  this.balanceLine.setAttribute('stroke-dasharray',`${chart} 1`);
-  this.balanceTotal.textContent=won(balanceData.months[0]+(balanceData.total-balanceData.months[0])*chart);
-  this.balance.querySelectorAll('[data-balance-month]').forEach(n=>n.style.opacity=.2+.8*chart);
-  this.balanceArcs.forEach(({node,dashes:[length,gap]})=>node.setAttribute('stroke-dasharray',`${length*chart} ${gap+length*(1-chart)}`));
-  this.balanceSettle=settle;this.positionBalanceLayers();
+ setPaused(value){this.paused=value;}
+ focus(){}
+ setPointer(x,y,energy=0){this.pointer={x,y,energy};this.positionLayers();}
+ positionLayers(){
+  const {x,y}=this.pointer;
+  this.depths.forEach((node,i)=>{if(this.stations[i].style.display==='none')return;node.setAttribute('transform',`translate(${x*(i===2?3:6)} ${y*4})`);
+   const reveal=this.reveals[i],settle=1-Math.pow(1-clamp((reveal-.06)/.7),3);
+   this.artLayers[i].forEach(layer=>{const kind=layer.dataset.artLayer||layer.dataset.balanceLayer;
+    if(kind==='type'||kind==='caption')return;
+    const depth=kind==='ribbon'||kind==='back'?-10:kind==='front'?11:4;
+    layer.setAttribute('transform',`translate(${x*depth} ${y*depth*.6+(1-settle)*(kind==='ribbon'?-14:21)}) ${layer.dataset.baseTransform}`);
+   });
+  });
+  const highlight=this.balance.querySelector('[data-balance-highlight]');highlight.setAttribute('cx',735+x*80);highlight.setAttribute('cy',195+y*55);
+  if(this.heroPositions)this.shards.forEach((node,i)=>{const p=this.heroPositions[i];node.setAttribute('transform',`translate(${p.x+x*(i===2?12:-7)} ${p.y+y*(i===2?8:-5)}) scale(${p.s}) rotate(${i===0?8:i===1?-8:-7})`);});
  }
- positionBalanceLayers(){
-  if(!this.balanceLayers)return;const p=this.pointer||{x:0,y:0},s=this.balanceSettle??1;
-  this.balanceLayers.ui.setAttribute('transform',`translate(${p.x*5} ${(1-s)*24+p.y*3}) rotate(${(1-s)*3} 480 470)`);
-  this.balanceLayers.ribbon.setAttribute('transform',`translate(${-p.x*9} ${-(1-s)*16-p.y*6})`);
-  this.balanceHighlight.setAttribute('cx',735+p.x*85);this.balanceHighlight.setAttribute('cy',195+p.y*55);
+ setReveal(index,value){
+  if(this.reveals[index]===value)return;this.reveals[index]=value;
+  if(index===1){const chart=1-Math.pow(1-clamp((value-.25)/.7),3);this.balanceLine.setAttribute('stroke-dasharray',`${chart} 1`);this.total.textContent=won(balanceData.months[0]+(balanceData.total-balanceData.months[0])*chart);this.arcs.forEach(({node,dashes:[length,gap]})=>node.setAttribute('stroke-dasharray',`${length*chart} ${gap+length*(1-chart)}`));}
  }
- highlightBalance(kind,index){
-  this.balance.querySelectorAll('[data-balance-arc]').forEach((n,i)=>n.style.opacity=(kind==='asset'&&i!==index) ? .3 : 1);
-  this.balance.querySelectorAll('[data-balance-month]').forEach((n,i)=>n.setAttribute('r',kind==='month'&&i===index?6:3.5));
+ select(index,choice){const root=this.stations[index];
+  if(index===0){root.querySelectorAll('[data-plan]').forEach((node,i)=>{node.querySelector('[data-plan-surface]').setAttribute('fill',i===choice?'#dfe7ff':'#f0f2f7');node.querySelector('[data-plan-surface]').setAttribute('stroke',i===choice?'#5268ed':'#e8eaf0');node.querySelector('[data-plan-check]').setAttribute('fill',i===choice?'#3d55ed':'#dce1ee');});root.querySelector('[data-connect-selected]').textContent=plans[choice].name+' · '+plans[choice].data+(choice<2?'GB':'');root.querySelector('[data-connect-remaining]').textContent=['9.8','32.8','∞'][choice];root.querySelector('[data-connect-unit]').textContent=choice<2?'GB':'';root.querySelector('[data-connect-percent]').textContent=['65.3%','65.6%','무제한'][choice];root.querySelector('[data-connect-ring]').setAttribute('stroke-dasharray',`${choice===2?371:choice===0?242:243} 371`);}
+  if(index===2){root.querySelector('[data-film-title]').textContent=films[choice].name;root.querySelector('[data-film-sub]').textContent=films[choice].sub;root.querySelector('[data-film-genre]').textContent=films[choice].genre;root.querySelectorAll('[data-film-focus]').forEach((n,i)=>n.setAttribute('stroke',i===choice?'#ffe3be':'transparent'));root.querySelector('[data-film-image]').setAttribute('href','/assets/'+filmImages[choice]);}
+  if(index===3){const p=products[choice];for(const [key,value]of Object.entries({title:p.name,kr:p.kr,price:p.price+'원',color:p.color}))root.querySelector('[data-product-'+key+']').textContent=value;root.querySelectorAll('[data-product-focus]').forEach((n,i)=>n.setAttribute('opacity',i===choice?1:0));}
+  if(index===4)root.querySelectorAll('[data-relay-view]').forEach(n=>n.setAttribute('opacity',n.dataset.relayView===(choice?'timeline':'board')?1:0));
  }
- focus(index){if(this.focused===index)return;this.focused=index;this.stations.forEach((n,i)=>n.classList.toggle('is-hovered',i===index));}
- setPaused(paused){if(this.paused===paused)return;this.paused=paused;if(paused){this.svg.pauseAnimations();this.focus(-1);}else this.svg.unpauseAnimations();}
- setPointer(x,y){this.pointer={x,y};const s=this.cam?.s||1;this.depthLayers.forEach(n=>{const d=Number(n.dataset.depth);n.setAttribute('transform',`translate(${(x*d/s).toFixed(3)} ${(y*d*.7/s).toFixed(3)})`);});this.positionBalanceLayers();}
+ highlightBalance(kind,index){this.arcs.forEach(({node},i)=>node.style.opacity=(kind==='asset'&&i!==index) ? .25 : 1);this.balance.querySelectorAll('[data-balance-month]').forEach((n,i)=>n.setAttribute('r',kind==='month'&&i===index?6:3.5));}
  render(cam,width,height,progress,paused){
-  this.cam=cam;this.balanceActive=cam.type==='arrival'&&cam.project===1;this.setPaused(paused);const w=width/cam.s,h=height/cam.s;this.svg.setAttribute('viewBox',`${cam.x-w/2} ${cam.y-h/2} ${w} ${h}`);this.svg.dataset.routeDistance=cam.routeDistance;
-  const start=Math.max(0,cam.routeDistance-.08),length=cam.type==='intro'?10+cam.t*90:210;
-  this.route.setAttribute('stroke-dasharray',`${length} 1000`);this.route.setAttribute('stroke-dashoffset',`${-start*1000}`);this.traveled.setAttribute('stroke-dasharray',`${Math.max(0,(cam.routeDistance-start)*1000)} 1000`);this.traveled.setAttribute('stroke-dashoffset',`${-start*1000}`);
-  this.route.style.opacity=clamp(progress/.65)*.28;this.traveled.style.opacity=clamp(progress/.65)*.5;
-  const point=routePoint(cam.routeDistance);this.cursor.setAttribute('cx',point.x);this.cursor.setAttribute('cy',point.y);this.cursor.style.opacity=clamp(progress/.8)*.7*(1-(this.balanceNear||0));
-  this.stations.forEach((n,i)=>{const visible=projectVisibility(progress,i);n.setAttribute('opacity',visible);n.setAttribute('pointer-events',visible>.3?'auto':'none');});
-  this.labels.forEach(n=>{n.setAttribute('transform',`translate(${17/cam.s} ${26/cam.s}) scale(${1/cam.s})`);n.style.opacity=cam.type==='arrival'?'0':'.65';});
-  this.layouts.forEach((node,i)=>{
-   const c=compositions[i],near=1-smooth(clamp(Math.abs(cam.routeDistance-stationDistances[i])/.11)),a=smooth(clamp((cam.zoom-1.5)/2.6))*near;
-   // Recompose within the right-hand stage as the camera arrives, leaving the
-   // HTML reading column clear. Pointer parallax remains on a separate wrapper.
-   const rightCenter=width*(i===1?.72:.74),fit=i===1?Math.min(width*.66/(c.w*cam.s),height*.8/(c.h*cam.s)):1,scale=1+(fit-1)*a,targetX=cam.x-projectStations[i].x+(rightCenter-width/2)/cam.s-c.w*scale/2,targetY=cam.y-projectStations[i].y-height*(i===1?.06:.025)/cam.s-c.h*scale/2;
-   node.setAttribute('transform',`translate(${c.x+(targetX-c.x)*a} ${c.y+(targetY-c.y)*a}) scale(${scale}) rotate(${c.a*(1-a*(i===1?1:.75))} ${c.w/2} ${c.h/2})`);this.stations[i].querySelector('.station-satellite').style.opacity=.75*(1-a);if(i===1){this.balanceNear=a;this.stations[i].querySelector('[data-station-node]').style.opacity=Math.pow(1-a,4);this.labels[i].style.opacity=cam.type==='arrival'?0:.65*Math.pow(1-a,4);}
+  this.cam=cam;this.part=storyAt(progress);this.paused=paused;const part=this.part;
+  this.svg.setAttribute('viewBox',`0 0 ${width} ${height}`);this.backSvg.setAttribute('viewBox',`0 0 ${width} ${height}`);this.svg.dataset.camera=`${cam.x},${cam.y},${cam.s}`;
+  this.route.setAttribute('transform',`translate(${width/2-cam.x*cam.s} ${height/2-cam.y*cam.s}) scale(${cam.s})`);this.route.style.opacity=part.type==='journey'?'.16':'0';
+  const introAlpha=1-smooth(clamp(progress/1.45));this.intro.style.opacity=introAlpha;this.intro.style.display=introAlpha>0?'':'none';this.backSvg.style.opacity=introAlpha;this.backSvg.style.display=introAlpha>0?'':'none';
+  this.heroPositions=[{x:width*.72,y:height*.16,s:Math.min(width*.34/450,height*.28/253)},{x:width*.58,y:height*.13,s:Math.min(width*.15/260,height*.29/400)},{x:width*.56,y:height*.65,s:Math.min(width*.44/590,height*.27/280)}];
+  this.stations.forEach((node,i)=>{
+   const pose=scenePose(i,cam,width,height);
+   if(!pose.visible){node.style.display='none';node.setAttribute('opacity',0);return;}
+   node.style.display='';
+   const c=stageLayouts[i];node.setAttribute('opacity',pose.opacity);node.setAttribute('pointer-events',part.type==='arrival'&&part.project===i?'auto':'none');
+   this.layouts[i].setAttribute('transform',`translate(${pose.x} ${pose.y}) rotate(${pose.a}) scale(${pose.s}) translate(${-c.nativeW/2} ${-c.nativeH/2})`);
   });
-  // Route graphics stay behind the work and clear the reading/arrival stage.
-  const routeEmphasis=Math.pow(1-(this.balanceNear||0),2);
-  this.route.style.opacity=clamp(progress/.65)*.28*routeEmphasis;this.traveled.style.opacity=clamp(progress/.65)*.5*routeEmphasis;this.cursor.style.opacity=clamp(progress/.8)*.7*routeEmphasis;
-  this.bridges.forEach(n=>{const d=Number(n.dataset.bridge),near=1-smooth(clamp(Math.abs(cam.routeDistance-d)/.14));n.setAttribute('opacity',clamp((progress-.8)/.7)*near*(n.dataset.bridgeProject==='1'?.85:.25));});
-  if(this.pointer)this.setPointer(this.pointer.x,this.pointer.y);
+  this.positionLayers();
  }
 }

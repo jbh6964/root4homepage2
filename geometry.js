@@ -19,15 +19,15 @@ export const routeDistances=[];
 for(const curve of routeCurves){for(let i=1;i<=160;i++){const p=cubic(curve,i/160),last=samples.at(-1);samples.push({...p,distance:last.distance+Math.hypot(p.x-last.x,p.y-last.y)});}routeDistances.push(samples.at(-1).distance);}
 export const routeLength=samples.at(-1).distance;
 routeDistances.forEach((distance,index)=>routeDistances[index]=distance/routeLength);
-export const stationDistances=projects.map(p=>routeDistances[p.routeIndex]);
+export const stationDistances=projects.map(p=>p.routePosition??routeDistances[p.routeIndex]);
 export function routePoint(progress){const distance=clamp(progress)*routeLength;let low=0,high=samples.length-1;while(low<high){const mid=(low+high)>>1;if(samples[mid].distance<distance)low=mid+1;else high=mid;}const b=samples[low],a=samples[Math.max(0,low-1)],t=(distance-a.distance)/(b.distance-a.distance||1);return{x:a.x+(b.x-a.x)*t,y:a.y+(b.y-a.y)*t};}
-export const projectStations=projects.map((project,index)=>({project:index,x:routeCurves[project.routeIndex][3][0],y:routeCurves[project.routeIndex][3][1],distance:stationDistances[index],name:project.name,category:project.category}));
+export const projectStations=projects.map((project,index)=>({project:index,...routePoint(stationDistances[index]),distance:stationDistances[index],name:project.name,category:project.category}));
 export const story=[{start:0,end:1.15,type:'intro',project:0,from:0,to:.025,zoomFrom:1,zoomTo:1.5}];
 let time=1.15,from=.025,zoom=1.5;
 projects.forEach((_,index)=>{
- const arrival=stationDistances[index]-.012,nextZoom=4.4+index*.35,duration=index===0?2.2:index===1?3.8:5.4;
+ const arrival=stationDistances[index]-(index<3?.012:.003),nextZoom=4.4+index*.35,duration=index===0?2.2:index===1?3.8:index===2?5.4:2.4;
  story.push({start:time,end:time+duration,type:'journey',project:index,from,to:arrival,zoomFrom:zoom,zoomTo:nextZoom});time+=duration;
- const departure=stationDistances[index]+.016;
+ const departure=stationDistances[index]+(index<3?.016:.003);
  story.push({start:time,end:time+4,type:'arrival',project:index,from:arrival,to:departure,zoomFrom:nextZoom,zoomTo:nextZoom+.22});time+=4;from=departure;zoom=nextZoom+.22;
 });
 story.push({start:time,end:time+2,type:'outro',project:projects.length-1,from,to:1,zoomFrom:zoom,zoomTo:zoom+.25});
