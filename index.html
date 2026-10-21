@@ -6,14 +6,16 @@
  <title>Root4 — 하나의 경험에서, 다음 가능성으로.</title>
  <link rel="icon" type="image/svg+xml" href="/assets/root4-mark.svg">
  <link rel="preload" href="/assets/fonts/manrope-variable.woff2" as="font" type="font/woff2" crossorigin>
+ <link rel="preload" href="/assets/fonts/cormorant-500.woff2" as="font" type="font/woff2" crossorigin>
  <link rel="stylesheet" href="/style.css">
 </head>
 <body>
  <header><a class="logo" href="#" data-restart aria-label="여정의 시작으로">root4<span>®</span></a><nav aria-label="메인 메뉴"><button data-panel="about">About</button><button data-panel="lab">Lab</button><button data-panel="contact">Contact <span>↗</span></button></nav></header>
  <main>
   <section id="explorer" aria-label="프로젝트 여정" tabindex="0">
-   <div id="viewport" aria-hidden="true"><div class="ambient-wash"></div><canvas id="ambient-field"></canvas><div id="scene"></div><div class="scene-grain"></div><div class="scene-vignette"></div></div>
+   <div id="viewport" aria-hidden="true"><div class="ambient-wash"></div><div class="balance-atmosphere"></div><canvas id="ambient-field"></canvas><div id="scene"></div><div class="scene-grain"></div><div class="scene-vignette"></div></div>
    <div class="intro"><span class="intro-eyebrow">ROOT4 / A JOURNEY THROUGH DIGITAL EXPERIENCES</span><h1>하나의 경험에서,<br><em>다음 가능성으로.</em></h1><p>루트포가 설계한 다양한 디지털 경험을 따라가 보세요.</p><div class="departure"><i></i><span>00 <b>스크롤하여 여정 시작</b><small>↓</small></span><div class="departure-line"></div></div><div class="intro-fragment" aria-hidden="true"><span>EXPERIENCE / 01</span><div><i></i><i></i><i></i></div><p>새로운 연결의 시작</p></div></div>
+   <div id="balance-chart" class="balance-chart" hidden aria-label="예시 금융 데이터"></div>
    <section id="arrival-info" class="arrival-info" aria-label="도착한 프로젝트" hidden></section>
    <section id="journey-end" aria-label="여정의 마지막" hidden><span>LET’S CREATE WHAT COMES NEXT.</span><h2>다음 경험은<br><em>함께 만들어갑니다.</em></h2><p>브랜드와 사람을 연결하는 다음 여정, 루트포와 시작해 보세요.</p><div><button class="primary-action" data-panel="contact">Contact <span>↗</span></button><button class="text-action" data-restart>시작으로 돌아가기 <span>↖</span></button></div></section>
    <footer><span id="chapter-label">여정의 시작</span><nav class="project-progress" aria-label="프로젝트 도착 지점"></nav><div class="footer-right"><span id="position">00 / 03</span><button id="toggle-motion" aria-pressed="false" aria-label="반복 모션 일시 정지">MOTION ON Ⅱ</button></div><div class="overall-progress" role="progressbar" aria-label="전체 여정 진행" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><i></i></div></footer>
