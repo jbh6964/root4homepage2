@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
 import {entranceState,fieldLight} from '../entrance-scene.js';
 import {scenePose,captionOpacity} from '../vector-scene.js';
 import {projectObject} from '../project-art.js';
@@ -7,6 +8,12 @@ import {camera,story,END} from '../geometry.js';
 
 const intro=story[0],travel=story[1],arrival=story[2];
 const state=p=>entranceState(camera(p,1440,1000));
+test('route markup is hidden before the first script frame',()=>{
+ const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
+ const css=readFileSync(new URL('../style.css',import.meta.url),'utf8');
+ assert.match(html,/id="journey-route" hidden/);
+ assert.match(css,/#journey-route\[hidden\]\{display:none!important\}/);
+});
 test('entrance hides every project through intro and the early approach',()=>{
  for(let p=0;p<=travel.start+(travel.end-travel.start)*.28;p+=.025){
   assert.equal(state(p).projectReveal,0);
@@ -31,6 +38,8 @@ test('the entrance passes once from dark depth into a bright gallery while the c
  assert.equal(state(0).gallery,0);assert.equal(state(travel.end).gallery,1);assert.equal(state(END).gallery,1);
  const atPortal=camera(intro.end,1440,1000),afterPullback=camera(travel.end,1440,1000);
  assert.ok(atPortal.zoom>afterPullback.zoom*1.5);
+ assert.equal(state(travel.start+(travel.end-travel.start)*.28).filamentOpacity,0);
+ assert.equal(state(END).filamentOpacity,0);
 });
 test('field position, direction, speed and light do not reset at scene boundaries',()=>{
  for(const boundary of story.slice(1).map(s=>s.start)){
