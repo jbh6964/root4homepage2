@@ -106,7 +106,7 @@ footer:before{content:'';position:absolute;inset:-20px -5vw -25px;z-index:-1;bac
 }
 
 .arrival-info:before{background:linear-gradient(90deg,#071216f5 0%,#071216eb 60%,#07121600 100%);inset:-30px -42px -28px -30px}
-.zoom-world [data-art-type] text,.zoom-world [data-balance-layer=type] text{paint-order:stroke;stroke:#071216;stroke-width:3px;stroke-linejoin:round}
+.zoom-world [data-art-type] text,.zoom-world [data-balance-layer=type] text{paint-order:stroke;stroke:color-mix(in srgb,var(--stage-bg) 84%,transparent);stroke-width:3px;stroke-linejoin:round}
 
 .arrival-info:before{mask-image:linear-gradient(transparent,#000 8%,#000 92%,transparent)}
 
@@ -118,3 +118,22 @@ footer:before{content:'';position:absolute;inset:-20px -5vw -25px;z-index:-1;bac
 .journey-route{width:100%;height:100%;display:block;overflow:hidden}.journey-route path,.journey-route circle{vector-effect:non-scaling-stroke}.route-future{fill:none;stroke:#9dcfc5;stroke-width:1.2;opacity:.22}.route-travelled{fill:none;stroke:#eff8e9;stroke-width:2.15;stroke-linecap:round}.route-travelled-glow{stroke:#71dcca;stroke-width:9;opacity:.2;filter:url(#route-glow)}.route-marker{fill:#fffbea;stroke:#8be1d2;stroke-width:1.5;filter:url(#route-glow)}.route-marker-halo{fill:none;stroke:#a9eadc;stroke-width:1;opacity:.58}.route-arrival-light{fill:#a6e3d3;opacity:calc(var(--arrival-light,0) * .21);filter:url(#arrival-glow)}.route-stations{opacity:.52}.route-stations circle{fill:#071216;stroke:#a7c9c3;stroke-width:1.2}.route-stations path{fill:none;stroke:#a7c9c3;stroke-width:.75;opacity:.55}.route-stations [data-passed] circle{fill:#dcefe5;stroke:#dcefe5}.route-stations [data-current] circle{fill:#fffbea;stroke:#fffbea;stroke-width:2}.route-stations [data-current] path{stroke:#fffbea;opacity:1}.zoom-world [data-station]{filter:drop-shadow(0 22px 34px #02090cad) drop-shadow(0 0 18px #9ad9ce24)}body.at-arrival .zoom-world [data-station]{filter:drop-shadow(0 24px 40px #02090cc7) drop-shadow(0 0 25px #bce8de45)}
 .journey-route[data-phase=intro] .route-stations{opacity:0}.brief-label{display:block;margin:22px 0 7px;font-size:7px;letter-spacing:1.35px;opacity:.66}.project-progress button[data-active]:before{content:'현재';font-size:6px;letter-spacing:.4px;border:1px solid currentColor;padding:2px 4px;border-radius:10px}.project-progress button[data-active] span{font-weight:750}.project-progress button[data-active] i{height:3px}
 @media(max-width:780px),(prefers-reduced-motion:reduce),(hover:none) and (pointer:coarse){#journey-route{display:none}}
+
+/* The dark entrance passes once into a pearl gallery. All interface ink is
+   derived from the same scroll-linked space mix set by app.js. */
+#viewport{background:var(--stage-bg)}
+.arrival-info{color:var(--stage-ink)}
+.arrival-info:before,.arrival-info[data-project=frame]:before,.arrival-info[data-project=relay]:before{background:linear-gradient(90deg,color-mix(in srgb,var(--stage-bg) 96%,transparent) 0%,color-mix(in srgb,var(--stage-bg) 88%,transparent) 60%,transparent 100%)}
+.scene-controls,.scene-controls[data-project=frame],.scene-controls[data-project=relay]{color:var(--stage-ink);background:color-mix(in srgb,var(--stage-bg) 91%,transparent);border:1px solid color-mix(in srgb,var(--stage-ink) 14%,transparent);box-shadow:0 16px 50px color-mix(in srgb,var(--stage-ink) 8%,transparent)}
+#journey-end,#journey-end h2{color:var(--stage-ink)}
+.route-future{stroke:var(--route-future);opacity:.31}.route-travelled{stroke:var(--route-active)}.route-travelled-glow{stroke:var(--route-glow);opacity:.19}.route-marker{fill:var(--route-active);stroke:var(--route-glow)}.route-marker-halo{stroke:var(--route-glow)}.route-arrival-light{fill:var(--route-glow)}.route-stations circle{fill:var(--stage-bg);stroke:var(--route-future)}.route-stations path{stroke:var(--route-future)}.route-stations [data-passed] circle,.route-stations [data-current] circle{fill:var(--route-active);stroke:var(--route-active)}.route-stations [data-current] path{stroke:var(--route-active)}
+.gallery-space .zoom-world [data-station]{filter:drop-shadow(0 26px 34px #49606f2b) drop-shadow(0 5px 9px #263c4d22)}.gallery-space.at-arrival .zoom-world [data-station]{filter:drop-shadow(0 32px 48px #40576a30) drop-shadow(0 7px 13px #263c4d2b)}
+.gallery-space footer:before{background:linear-gradient(transparent,color-mix(in srgb,var(--stage-bg) 93%,transparent) 78%)}
+.gallery-space .contact-cta{background:#174f62;border-color:#174f62;color:#f7faf7}.gallery-space .contact-cta:hover{background:#0d3948}.gallery-space .contact-actions .text-action{background:#f7f8f4c7;color:#183f50;border-color:#55717d59}
+#transit-info{color:var(--stage-ink)}
+@media(max-width:780px),(prefers-reduced-motion:reduce),(hover:none) and (pointer:coarse){
+ #project-list{background:radial-gradient(ellipse at 85% 35%,#dfe8f1 0%,#eef1f2 32%,#f7f7f2 72%);color:#1b3540}
+ #project-list:before{display:none}.list-card{color:#1b3540;background:transparent}.list-copy:before{background:linear-gradient(90deg,#f7f7f2e8,#f7f7f288 64%,transparent)}
+ .mobile-project-nav{border-color:#8196a45c}.mobile-project-nav button{color:#426778}.mobile-project-nav span{color:#203f4e}
+ .mobile-ending{color:#183b4a;background:transparent}.mobile-ending:before{background:linear-gradient(transparent,#dde8ecbd 25%,#eff3f1)}
+}

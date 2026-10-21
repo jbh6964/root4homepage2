@@ -24,7 +24,7 @@ $('.mobile-project-nav').innerHTML=projects.map((p,i)=>`<button data-jump="${i}"
 $('#list-items').innerHTML=projects.map((p,i)=>`<article class="list-card" style="--card-bg:#071216;--card-ink:#f0ecdf" id="project-${p.id}" tabindex="-1"><div class="art-list">${projectVisual(i)}</div><div class="list-copy">${summary(i)}</div></article>`).join('');
 function syncMotion(){const halted=paused||document.hidden||document.body.classList.contains('motion-off')||fallback.matches;vectorScene.setPaused(halted);direction.update(current,storyAt(current),halted,fallback.matches);}
 function render(){
- const cam=camera(current,innerWidth,innerHeight),part=storyAt(current),inArrival=part.type==='arrival',fade=entranceState(cam).textOpacity;
+ const cam=camera(current,innerWidth,innerHeight),part=storyAt(current),inArrival=part.type==='arrival',field=entranceState(cam),fade=field.textOpacity;
  vectorScene.render(cam,innerWidth,innerHeight,current,paused||document.hidden||document.body.classList.contains('motion-off')||fallback.matches);
  if(fallback.matches)$('#entrance-field').hidden=true;else entrance.render(cam,innerWidth,innerHeight);
  if(!fallback.matches)journeyPath.render(cam,innerWidth,innerHeight,current,END);
@@ -33,6 +33,9 @@ function render(){
  if(inArrival&&arrivalIndex!==part.project)mountArrival(part.project);
  arrival.hidden=!inArrival;arrival.inert=!inArrival||captionOpacity(cam)<.05;arrival.style.opacity=captionOpacity(cam);$('#scene-controls').style.setProperty('--caption-opacity',captionOpacity(cam));
  direction.update(current,part,paused||document.hidden,fallback.matches);
+ const blend=(a,b,t)=>a.map((v,i)=>Math.round(v+(b[i]-v)*t));
+ const color=rgb=>`rgb(${rgb.join(' ')})`,light=Math.max(field.gallery,clamp((field.passage-.48)/.45)),ink=blend([240,236,223],[24,44,53],light),surface=blend([7,18,22],[241,243,242],light);
+ document.body.style.setProperty('--space-light',light);document.body.style.setProperty('--stage-bg',color(surface));document.body.style.setProperty('--stage-ink',color(ink));document.body.style.setProperty('--route-future',color(blend([157,207,197],[87,111,122],light)));document.body.style.setProperty('--route-active',color(blend([239,248,233],[20,72,88],light)));document.body.style.setProperty('--route-glow',color(blend([113,220,202],[45,105,127],light)));document.body.classList.toggle('gallery-space',light>.52);
  const transit=$('#transit-info');transit.hidden=part.type!=='journey'||(part.project===0&&part.t<.6);if(part.type==='journey'){transit.querySelector('span').textContent=`${digits(part.project)} / ${projects[part.project].category}`;transit.querySelector('p').textContent=projects[part.project].transition;}
  const ending=part.type==='outro';$('#journey-end').hidden=!ending;$('#journey-end').style.opacity=ending?clamp(part.t*2.7):0;$('#journey-end').inert=!ending||part.t<.08;
  document.body.classList.toggle('at-arrival',inArrival);

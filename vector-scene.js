@@ -14,7 +14,7 @@ const mix=(a,b,t)=>a+(b-a)*t;
 export function stagePose(index,cam,width,height){
  const c=stageLayouts[index],fit=Math.min(width*c.w/c.nativeW,height*c.h/c.nativeH),station=projectStations[index];
  const driftX=(station.x-cam.x)*cam.s*.12,driftY=(station.y-cam.y)*cam.s*.1;
- return{x:width*c.x+driftX,y:height*c.y+driftY,s:fit*cam.zoom/(4.5+index*.35),a:0};
+ return{x:width*c.x+driftX,y:height*c.y+driftY,s:fit*cam.zoom/(index===0?2.65:4.5+index*.35),a:0};
 }
 export function scenePose(index,cam,width,height){
  const part=cam,pose=stagePose(index,cam,width,height),active=(part.type==='arrival'||part.type==='journey')&&part.project===index;

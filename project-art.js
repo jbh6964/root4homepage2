@@ -9,8 +9,9 @@ export const films=[{name:'ECHOES',sub:'다음 장면은, 아직 만나지 못�
 function connectApp(id){return ` <g data-art-layer="back" transform="translate(708 130) rotate(10)">${R(0,0,238,365,'#d9ff72',29)}${T(22,42,'my connect',21,'fill="#27362a" font-weight="650" letter-spacing="-1"')}${T(22,84,'이번 달 남은 데이터',11,'fill="#526437"')}${T(19,158,'32.8',61,'data-connect-remaining fill="#27362a" font-weight="550" letter-spacing="-4"')}${T(165,155,'GB',17,'data-connect-unit fill="#526437"')}<circle cx="119" cy="247" r="59" fill="none" stroke="#aecb57" stroke-width="14"/><circle data-connect-ring cx="119" cy="247" r="59" fill="none" stroke="#3849df" stroke-width="14" stroke-dasharray="243 371" transform="rotate(-90 119 247)"/>${T(119,252,'65.6%',22,'data-connect-percent fill="#33463b" text-anchor="middle"')}${T(119,336,'데이터 선물하기　↗',11,'fill="#475434" text-anchor="middle"')}</g>
 `;}
 function connectArt(id){return `
- <g fill="#f4f4e9"><g data-art-type>${T(35,125,'Closer,',113,'font-weight="650" letter-spacing="-7"')}${T(272,237,'together.',113,'font-weight="650" letter-spacing="-7"')}</g>
+ <g fill="#183f67"><g data-art-type fill="#173f78">${T(35,125,'Connection,',98,'font-weight="650" letter-spacing="-6"')}${T(272,221,'made simple.',91,'font-weight="650" letter-spacing="-6"')}</g>
  ${connectApp(id)}
+ <g data-art-layer="front" transform="translate(642 592)">${R(0,0,318,124,'#193f79',14)}${T(22,29,'SERVICE MAP / 구성 예시',8,'fill="#aebff4" letter-spacing="1.4"')}<path d="M28 78C76 28 121 102 165 67S239 42 287 76" fill="none" stroke="#d9ff72" stroke-width="2"/>${[28,96,165,230,287].map((x,i)=>`<circle cx="${x}" cy="${[78,58,67,51,76][i]}" r="${i===2?7:4}" fill="${i===2?'#d9ff72':'#8ea5f2'}"/>`).join('')}${T(22,108,'요금제　혜택　사용량　관리',8,'fill="#d8e0ff" letter-spacing="1"')}</g>
  <g data-art-layer="ui"><g transform="translate(20 263) rotate(-5 430 210)">
  ${R(8,16,826,390,'#1728a7',18,'opacity=".25"')}${R(0,0,826,390,'#f9faf4',16)}${R(0,0,826,43,'#e7ebfb',16)}${R(0,25,826,18,'#e7ebfb')}
  <g fill="#a9b4e8"><circle cx="19" cy="22" r="3"/><circle cx="30" cy="22" r="3"/><circle cx="41" cy="22" r="3"/></g>${T(413,25,'connect / YOUR EVERYDAY NETWORK',8,'fill="#7789c2" text-anchor="middle" letter-spacing="1.6"')}
@@ -23,8 +24,9 @@ function financeArt(id){
  const circumference=2*Math.PI*88;let offset=0;
  const arcs=balanceData.assets.map((p,i)=>{const length=circumference*p.share/100-5,result=`<circle data-balance-arc="${i}" cx="186" cy="573" r="88" fill="none" stroke="${p.color}" stroke-width="26" stroke-dasharray="${length} ${circumference-length}" stroke-dashoffset="${-offset}" transform="rotate(-90 186 573)"/><circle data-balance-hit="${i}" cx="186" cy="573" r="88" fill="none" stroke="transparent" stroke-width="39" stroke-dasharray="${length} ${circumference-length}" stroke-dashoffset="${-offset}" transform="rotate(-90 186 573)" pointer-events="stroke"/>`;offset+=circumference*p.share/100;return result;}).join('');
  return `<defs><linearGradient id="${id}-area" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#a07bd4" stop-opacity=".35"/><stop offset="1" stop-color="#a07bd4" stop-opacity="0"/></linearGradient></defs>
- <g fill="#efe8f6">
- <g data-balance-layer="type">${T(27,71,'FINANCE, IN PERSPECTIVE.',10,'letter-spacing="3" fill="#ad95c0"')}${T(20,179,'A clearer picture.',109,'font-family="Cormorant,Georgia,serif" font-weight="500" letter-spacing="-4"')}</g>
+ <g fill="#4b2d68">
+ <g data-balance-layer="type">${T(27,71,'FINANCE, IN PERSPECTIVE.',10,'letter-spacing="3" fill="#76528e"')}${T(20,179,'See the whole balance.',91,'font-family="Cormorant,Georgia,serif" font-weight="500" letter-spacing="-4"')}</g>
+ <g data-art-layer="back" transform="translate(615 80)">${['자산 이해','소비 확인','다음 행동'].map((label,i)=>`<g transform="translate(${i*112} 0)">${R(0,0,101,31,['#e4d9f1','#d8e9ee','#eee2d5'][i],16)}${T(50,20,label,8,'fill="#583d69" text-anchor="middle" letter-spacing=".4"')}</g>`).join('')}</g>
  <g data-balance-layer="front">${T(33,332,'모든 자산이 하나의 균형으로.',12,'fill="#b6a0c9"')}${T(27,397,'12,480,000',57,'data-balance-total font-weight="500" letter-spacing="-3"')}${T(35,427,'총 자산 · 금액 예시 / 원',9,'fill="#b3a1c2" letter-spacing="1"')}
  <circle cx="186" cy="573" r="88" fill="none" stroke="#4c3d5c" stroke-width="26"/>${arcs}${T(186,566,'MY BALANCE',8,'fill="#b5a0c7" text-anchor="middle" letter-spacing="2"')}${T(186,601,'100%',42,'fill="#e5d7f0" text-anchor="middle" letter-spacing="-2"')}
  ${balanceData.assets.map((p,i)=>`<circle cx="48" cy="${701+i*25}" r="3" fill="${p.color}"/>${T(60,705+i*25,p.name,10,'fill="#bca6ce"')}${T(341,705+i*25,p.amount.toLocaleString('ko-KR')+'원',12,'text-anchor="end" fill="#dbcae9"')}`).join('')}</g>
@@ -41,7 +43,7 @@ function financeArt(id){
 }
 function frameArt(id){return `<defs><linearGradient id="${id}-film" x1="0" y1="0" x2="1" y2="0"><stop stop-color="#170d23" stop-opacity=".8"/><stop offset=".62" stop-color="#170d23" stop-opacity="0"/></linearGradient><clipPath id="${id}-cinema"><rect x="40" y="96" width="1200" height="460" rx="8"/></clipPath></defs>
  <g fill="#fff2df">
-
+ <g data-art-type fill="#513754">${T(42,64,'DISCOVER / FOCUS / PLAY',12,'letter-spacing="3"')}${T(848,66,'CONTENT AS EXPERIENCE',10,'text-anchor="end" letter-spacing="2"')}</g>
  <g data-art-layer="ui"><g clip-path="url(#${id}-cinema)">${I('frame-cinema.webp',40,96,1200,460,'data-film-image')}${R(40,96,1200,460,'url(#'+id+'-film)')}</g>
  ${T(69,138,'FRAME',23,'font-weight="700" letter-spacing="3"')}${T(288,134,'홈　　발견　　이어보기',11,'fill="#e8d7cd"')}${T(1209,134,'검색　⌕',11,'text-anchor="end"')}
  ${T(87,313,'ROOT4 ORIGINAL / CONCEPT',10,'fill="#ffbd8e" letter-spacing="2.5"')}${T(82,395,'ECHOES',83,'data-film-title font-weight="550" letter-spacing="-4"')}${T(88,428,films[0].sub,14,'data-film-sub fill="#f3d9c7"')}${T(88,456,films[0].genre,10,'data-film-genre fill="#dcc4b7"')}
@@ -50,14 +52,15 @@ function frameArt(id){return `<defs><linearGradient id="${id}-film" x1="0" y1="0
  <g data-art-layer="front">${films.map((film,i)=>`<g data-film="${i}" transform="translate(${89+i*382} 555)">${R(0,0,364,98,['#492d62','#2d2845','#d57553'][i],5)}${I(filmImages[i],0,0,364,98)}${R(0,49,364,49,'#160d2866')}${R(0,0,364,98,'#160d2820',5,`data-film-focus stroke="${i===0?'#ffe3be':'transparent'}" stroke-width="3"`)}${T(17,76,film.name,22,'font-weight="600" letter-spacing="-1"')}${T(17,92,['01 / FEATURE FILM','02 / SERIES','03 / DOCUMENTARY'][i],7,'fill="#f6e5dc" letter-spacing="1"')}</g>`).join('')}</g>
  </g>`;}
 function objectsArt(id){return `<defs><clipPath id="${id}-shop"><rect x="16" y="168" width="952" height="514" rx="0"/></clipPath><linearGradient id="${id}-shop-shade" x1="0" y1="0" x2="0" y2="1"><stop offset=".48" stop-color="#152820" stop-opacity="0"/><stop offset="1" stop-color="#152820" stop-opacity=".64"/></linearGradient></defs><g fill="#26321d">
- <g data-art-type fill="#eef2da">${T(8,111,'Find your signal.',92,'font-weight="550" letter-spacing="-5.5"')}${T(587,151,'Choose with clarity.',39,'font-family="Cormorant,Georgia,serif" font-style="italic" letter-spacing="-1.5"')}</g>
+ <g data-art-type fill="#183f3b">${T(8,111,'Find your signal.',92,'font-weight="550" letter-spacing="-5.5"')}${T(587,151,'Choose with clarity.',39,'font-family="Cormorant,Georgia,serif" font-style="italic" letter-spacing="-1.5"')}</g>
  <g data-art-layer="ui"><g clip-path="url(#${id}-shop)">${I('objects-digital-campaign.webp',16,168,952,514)}${R(16,168,952,514,'url(#'+id+'-shop-shade)')}</g>
  ${R(16,168,952,57,'#fffdf4')}${T(40,205,'objects /',23,'font-weight="700" letter-spacing="-1.2"')}${T(279,203,'추천　　오디오　　웨어　　캐리',11,'fill="#626c62"')}${T(941,203,'검색　　비교 0　　장바구니 0',10,'fill="#626c62" text-anchor="end"')}
  ${[0,1,2].map((i)=>`<rect data-product-focus="${i}" x="${[43,328,676][i]}" y="${[270,302,252][i]}" width="${[280,344,264][i]}" height="${[318,348,316][i]}" rx="6" fill="none" stroke="#f5f3df" stroke-width="2.2" opacity="${i===0?1:0}"/>`).join('')}
  ${R(16,620,952,122,'#faf9ed')}${T(40,651,'추천 컬렉션 / 구성 예시',8,'fill="#7b806f" letter-spacing="1.5"')}${T(40,694,products[0].name,27,'data-product-title font-weight="600" letter-spacing="-1"')}${T(40,719,products[0].kr,11,'data-product-kr fill="#707768"')}${T(555,660,'선택 옵션',8,'fill="#7b806f"')}${T(555,694,products[0].color,12,'data-product-color fill="#4c574a"')}${T(754,695,products[0].price+'원',22,'data-product-price font-weight="550" text-anchor="end"')}${R(790,651,151,64,'#29351e',3)}${T(865,689,'옵션 살펴보기　↗',11,'fill="#f5f4de" text-anchor="middle"')}
  </g></g>`;}
 function relayArt(id){const tasks=[['서비스 구조 정리','UX / 지민','핵심'],['탐색 화면 설계','UI / 서연','높음'],['컴포넌트 정리','SYSTEM / 도윤','보통'],['접근성 검토','QA / 하린','핵심'],['프로토타입 리뷰','TEAM / 전체','높음'],['가이드 업데이트','SYSTEM / 서연','보통']];return `<g fill="#44322d">
- <g data-art-type fill="#f4e9db">${T(20,105,'Work, in sync.',92,'font-weight="550" letter-spacing="-5"')}</g>
+ <g data-art-type fill="#7d342c">${T(20,105,'Work, in sync.',92,'font-weight="550" letter-spacing="-5"')}</g>
+ <g data-art-layer="back" transform="translate(814 42)">${['06 업무','04 담당자','03 상태'].map((label,i)=>`<g transform="translate(${i*128} 0)">${R(0,0,116,46,'#eadfd2',23)}${T(58,28,label,10,'fill="#764c40" text-anchor="middle"')}</g>`).join('')}</g>
  <g data-art-layer="ui"><g transform="translate(18 124) rotate(-1 610 280)">${R(9,14,1230,567,'#942f22',12,'opacity=".17"')}${R(0,0,1230,567,'#fff8ed',10)}${R(0,0,191,567,'#382a29',10)}${R(172,0,19,567,'#382a29')}
  ${T(23,47,'relay',32,'fill="#fff0d7" font-weight="650" letter-spacing="-2"')}${T(23,85,'ROOT4 / TEAM SPACE',8,'fill="#c7ada2" letter-spacing="1.4"')}
  ${['워크스페이스','프로젝트','내 업무','인사이트','파일'].map((s,i)=>`${i===1?R(11,130+i*43,169,34,'#61504a',5):''}${T(29,153+i*43,s,12,`fill="${i===1?'#fff0d8':'#ac948b'}"`)}`).join('')}
@@ -72,4 +75,4 @@ const views=['0 0 1000 780','0 0 1000 780','0 0 1280 690','0 0 1000 780','0 0 12
 const art=[connectArt,financeArt,frameArt,objectsArt,relayArt];
 export function projectObject(index,id){return `<svg class="project-object" width="100%" height="100%" viewBox="${views[index]}" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><g font-family="Manrope,Arial,sans-serif">${art[index](id)}</g></svg>`;}
 let instance=0;
-export function projectVisual(index){const id='cover-'+instance++;return `<svg class="project-art" viewBox="0 0 1280 900" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><svg x="45" y="35" width="1190" height="790">${projectObject(index,id)}</svg>${T(45,863,'ROOT4 / DIGITAL EXPERIENCE — 구성 예시',9,`font-family="Manrope,Arial,sans-serif" fill="#b9c7c5" letter-spacing="1.6"`)}</svg>`;}
+export function projectVisual(index){const id='cover-'+instance++;return `<svg class="project-art" viewBox="0 0 1280 900" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><svg x="45" y="35" width="1190" height="790">${projectObject(index,id)}</svg>${T(45,863,'ROOT4 / DIGITAL EXPERIENCE — 구성 예시',9,`font-family="Manrope,Arial,sans-serif" fill="#526b76" letter-spacing="1.6"`)}</svg>`;}

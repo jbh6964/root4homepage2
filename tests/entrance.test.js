@@ -22,6 +22,16 @@ test('one background depth advances across the complete itinerary including read
  }
  for(const part of story.filter(s=>s.type==='arrival'))assert.ok(state(part.end).depth>state(part.start).depth+10);
 });
+test('the entrance passes once from dark depth into a bright gallery while the camera pulls back',()=>{
+ const samples=Array.from({length:240},(_,i)=>state(i/239*END));
+ for(let i=1;i<samples.length;i++){
+  assert.ok(samples[i].passage>=samples[i-1].passage);
+  assert.ok(samples[i].gallery>=samples[i-1].gallery);
+ }
+ assert.equal(state(0).gallery,0);assert.equal(state(travel.end).gallery,1);assert.equal(state(END).gallery,1);
+ const atPortal=camera(intro.end,1440,1000),afterPullback=camera(travel.end,1440,1000);
+ assert.ok(atPortal.zoom>afterPullback.zoom*1.5);
+});
 test('field position, direction, speed and light do not reset at scene boundaries',()=>{
  for(const boundary of story.slice(1).map(s=>s.start)){
   const a=state(boundary-1e-6),b=state(boundary),c=state(boundary+1e-6);

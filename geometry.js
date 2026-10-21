@@ -22,12 +22,12 @@ routeDistances.forEach((distance,index)=>routeDistances[index]=distance/routeLen
 export const stationDistances=projects.map(p=>p.routePosition??routeDistances[p.routeIndex]);
 export function routePoint(progress){const distance=clamp(progress)*routeLength;let low=0,high=samples.length-1;while(low<high){const mid=(low+high)>>1;if(samples[mid].distance<distance)low=mid+1;else high=mid;}const b=samples[low],a=samples[Math.max(0,low-1)],t=(distance-a.distance)/(b.distance-a.distance||1);return{x:a.x+(b.x-a.x)*t,y:a.y+(b.y-a.y)*t};}
 export const projectStations=projects.map((project,index)=>({project:index,...routePoint(stationDistances[index]),distance:stationDistances[index],name:project.name,category:project.category}));
-export const story=[{start:0,end:1.15,type:'intro',project:0,from:0,to:.025,zoomFrom:1,zoomTo:1.5}];
-let time=1.15,from=.025,zoom=1.5;
+export const story=[{start:0,end:1.45,type:'intro',project:0,from:0,to:.032,zoomFrom:1,zoomTo:4.15}];
+let time=1.45,from=.032,zoom=4.15;
 projects.forEach((_,index)=>{
- const arrival=stationDistances[index]-(index<3?.012:.003),nextZoom=4.4+index*.35,duration=index===0?2.2:index===1?3.8:index===2?5.4:2.4;
+ const arrival=stationDistances[index]-(index<3?.012:.003),nextZoom=index===0?2.55:4.4+index*.35,duration=index===0?3.35:index===1?3.8:index===2?5.4:2.4;
  story.push({start:time,end:time+duration,type:'journey',project:index,from,to:arrival,zoomFrom:zoom,zoomTo:nextZoom});time+=duration;
- const departure=stationDistances[index]+(index<3?.016:.003);
+ const departure=stationDistances[index]+(index===0?.006:index<3?.016:.003);
  story.push({start:time,end:time+4,type:'arrival',project:index,from:arrival,to:departure,zoomFrom:nextZoom,zoomTo:nextZoom+.22});time+=4;from=departure;zoom=nextZoom+.22;
 });
 story.push({start:time,end:time+2,type:'outro',project:projects.length-1,from,to:1,zoomFrom:zoom,zoomTo:zoom+.25});
