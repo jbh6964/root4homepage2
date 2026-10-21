@@ -1,5 +1,5 @@
 import { projects } from './projects.js';
-import { projectVisual } from './project-art.js';
+import { projectVisual, brandMark, projectPalettes } from './project-art.js';
 import { VectorScene } from './vector-scene.js';
 import { END, story, stops, storyAt, camera, normalizeWheel, clamp } from './geometry.js';
 const $ = selector => document.querySelector(selector);
@@ -21,10 +21,10 @@ function synchronizeAnimations(root){
  const time=(motionPausedAt??performance.now())-motionOrigin-motionPausedTotal;
  root.getAnimations({subtree:true}).forEach(animation=>{animation.currentTime=time;});
 }
-function specimen(index){const p=projects[index];return `<div class="case-art-board">${projectVisual(index)}</div><div class="case-identity-card"><span>${p.short}</span><small>${p.category}<br>ROOT4 STUDIO / ${p.year}</small></div><div class="case-chip"><i></i><span>0${index+1} / DESIGN STUDIES</span></div>`;}
+function specimen(index){const p=projects[index],[bg,fg,accent]=projectPalettes[index];return `<div class="case-art-board">${projectVisual(index)}</div><div class="case-identity-card">${brandMark(index)}<span>${p.short}</span><small>${p.category}<br>ROOT4 STUDIO / ${p.year}</small></div><div class="case-chip"><div class="material-swatches"><i style="background:${bg}"></i><i style="background:${fg}"></i><i style="background:${accent}"></i></div><span>0${index+1} / COLOUR STUDY<br>${p.year} COLLECTION</span></div>`;}
 function digital(index) {
- const p=projects[index];
- return `<div class="browser-mock"><div class="browser-toolbar"><i></i><i></i><i></i><span>${p.short} / digital experience</span></div><div class="browser-body theme-${index}"><nav><b>${p.short}</b><span>Discover　 Studio　 ↗</span></nav><div class="browser-headline">${p.title.replaceAll('\n','<br>')}</div><div class="browser-visual">${projectVisual(index)}</div><span class="browser-bottom">EXPLORE THE POSSIBILITIES <b>↓</b></span></div></div><div class="phone-mock theme-${index}"><span>${p.short}</span><div class="phone-visual">${index===1?'m.':index===0?'f/o':'↗'}</div><b>${index===1?'Your daily ritual.':index===0?'Better, together.':'On your frequency.'}</b><div class="phone-ui-line"></div><div class="phone-ui-line short"></div><small>DISCOVER MORE　↗</small></div>`;
+ const p=projects[index],heads=['Better, together.','Your daily ritual.','Find your frequency.','A softer kind of bright.','Make yourself at home.','Open to new ideas.'];
+ return `<div class="browser-mock"><div class="browser-toolbar"><i></i><i></i><i></i><span>${p.short} / digital experience</span></div><div class="browser-body theme-${index}"><nav><b>${p.short}</b><span>Discover　 Studio　 ↗</span></nav><span class="browser-eyebrow">${p.category} — ${p.year}</span><div class="browser-headline">${p.title.replaceAll('\n','<br>')}</div><div class="browser-visual">${projectVisual(index)}</div><div class="browser-stamp">${brandMark(index)}<span>AN INDEPENDENT<br>POINT OF VIEW.</span></div><span class="browser-bottom">EXPLORE THE POSSIBILITIES <b>↓</b></span></div></div><div class="phone-mock theme-${index}"><div class="phone-status"><span>9:41</span><span>● ▰</span></div><span>${p.short}<i>☰</i></span><div class="phone-visual">${brandMark(index)}</div><b>${heads[index]}</b><p>${p.category}</p><div class="phone-ui-line"></div><div class="phone-ui-line short"></div><small>DISCOVER MORE　↗</small></div>`;
 }
 let caseIndex=-1;
 function mountCase(index) {
